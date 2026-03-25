@@ -1,0 +1,65 @@
+version: 2
+
+project_name: mobileops-cli
+
+builds:
+  - main: ./cmd/mobileops
+    binary: mobileops
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: MobileOps-Team
+    name: mobileops-cli
+
+brews:
+  - repository:
+      owner: MobileOps-Team
+      name: homebrew-tap
+    name: mobileops
+    homepage: "https://www.mobileops.at"
+    description: "CLI for the MobileOps API"
+    install: |
+      bin.install "mobileops"
+    test: |
+      system "#{bin}/mobileops", "version"
+
+scoops:
+  - repository:
+      owner: MobileOps-Team
+      name: homebrew-tap
+    name: mobileops-cli
+    homepage: "https://www.mobileops.at"
+    description: "CLI for the MobileOps API"
+
+nfpms:
+  - package_name: mobileops-cli
+    homepage: "https://www.mobileops.at"
+    description: "CLI for the MobileOps API"
+    maintainer: "MobileOps Team <support@mobileops.at>"
+    license: MIT
+    formats:
+      - deb
+      - rpm
+      - apk
+    bindir: /usr/bin

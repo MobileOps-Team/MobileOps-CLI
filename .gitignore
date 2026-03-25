@@ -1,15 +1,6 @@
-/.bundle/
-/.yardoc
-/_yardoc/
-/coverage/
-/doc/
-/pkg/
-/spec/reports/
-/tmp/
-/vendor/bundle/
-
-*.gem
-Gemfile.lock
+# Binary
+/bin/mobileops
+/dist/
 
 # IDE
 .idea/
@@ -20,3 +11,7 @@ Gemfile.lock
 
 # Credentials (never commit)
 credentials.json
+
+# OS
+.DS_Store
+Thumbs.db
