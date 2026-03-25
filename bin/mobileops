@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "mobileops"
+
+# Propagate --env flag to ENV so all Client.new calls pick it up
+if (idx = ARGV.index("--env")) && ARGV[idx + 1]
+  ENV["MOBILEOPS_ENV"] = ARGV[idx + 1]
+end
+
+Mobileops::CLI.start(ARGV)
