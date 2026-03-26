@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -143,6 +144,54 @@ func (c *Client) Get(path string, params map[string]string) (map[string]interfac
 	}
 
 	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+
+	return c.doWithRetry(req)
+}
+
+// Post performs a POST request to the API.
+func (c *Client) Post(path string, body map[string]interface{}) (map[string]interface{}, error) {
+	return c.mutate("POST", path, body)
+}
+
+// Put performs a PUT request to the API.
+func (c *Client) Put(path string, body map[string]interface{}) (map[string]interface{}, error) {
+	return c.mutate("PUT", path, body)
+}
+
+// Delete performs a DELETE request to the API.
+func (c *Client) Delete(path string) (map[string]interface{}, error) {
+	apiPath := c.apiPath(path)
+	u, err := url.Parse(c.host + apiPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+
+	return c.doWithRetry(req)
+}
+
+func (c *Client) mutate(method, path string, body map[string]interface{}) (map[string]interface{}, error) {
+	apiPath := c.apiPath(path)
+	u, err := url.Parse(c.host + apiPath)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(method, u.String(), bytes.NewReader(jsonBody))
 	if err != nil {
 		return nil, err
 	}

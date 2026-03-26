@@ -3,10 +3,12 @@ package commands
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/MobileOps-Team/mobileops-cli/internal/client"
 	"github.com/MobileOps-Team/mobileops-cli/internal/envelope"
 	"github.com/MobileOps-Team/mobileops-cli/internal/formatter"
+	"github.com/spf13/cobra"
 )
 
 // handleClientError prints client errors in a user-friendly way.
@@ -62,4 +64,49 @@ func collectionBreadcrumbs(response map[string]interface{}, cmdTemplate string, 
 		}
 	}
 	return breadcrumbs
+}
+
+// bodyFromFlags builds a JSON body from string flags on a command.
+// flagMap maps flag-name -> api_param_name.
+func bodyFromFlags(cmd *cobra.Command, flagMap map[string]string) map[string]interface{} {
+	body := make(map[string]interface{})
+	for flag, param := range flagMap {
+		if cmd.Flags().Changed(flag) {
+			val, _ := cmd.Flags().GetString(flag)
+			body[param] = val
+		}
+	}
+	return body
+}
+
+// bodyFromBoolFlags adds boolean flags to an existing body.
+func bodyFromBoolFlags(cmd *cobra.Command, body map[string]interface{}, flagMap map[string]string) {
+	for flag, param := range flagMap {
+		if cmd.Flags().Changed(flag) {
+			val, _ := cmd.Flags().GetBool(flag)
+			body[param] = val
+		}
+	}
+}
+
+// bodyFromArrayFlags adds array flags (comma-separated) to an existing body.
+func bodyFromArrayFlags(cmd *cobra.Command, body map[string]interface{}, flagMap map[string]string) {
+	for flag, param := range flagMap {
+		if cmd.Flags().Changed(flag) {
+			val, _ := cmd.Flags().GetString(flag)
+			parts := strings.Split(val, ",")
+			for i := range parts {
+				parts[i] = strings.TrimSpace(parts[i])
+			}
+			body[param] = parts
+		}
+	}
+}
+
+// wrapBody wraps the body in a resource key (e.g., {"asset": {...}}).
+func wrapBody(key string, body map[string]interface{}) map[string]interface{} {
+	if len(body) == 0 {
+		return body
+	}
+	return map[string]interface{}{key: body}
 }
