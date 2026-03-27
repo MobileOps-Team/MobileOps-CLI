@@ -99,6 +99,20 @@ npx skills add MobileOps-Team/mobileops-cli
 
 See [`skills/mobileops/SKILL.md`](skills/mobileops/SKILL.md) for the full skill reference.
 
+## Updating
+
+```bash
+mobileops update                   # Self-update to the latest version
+mobileops version                  # Check current version
+```
+
+The CLI checks for updates in the background. When a new version is available, you'll see:
+
+```
+⚠ Update available: v0.1.0 → v0.2.0
+  Run: mobileops update
+```
+
 ## Configuration
 
 ```
