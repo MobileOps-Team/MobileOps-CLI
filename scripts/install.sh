@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # MobileOps CLI installer
-# Usage: curl -fsSL https://www.mobileops.at/install-cli | bash
-#    or: curl -fsSL https://raw.githubusercontent.com/MobileOps-Team/mobileops-cli/master/scripts/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/MobileOps-Team/mobileops-cli/main/scripts/install.sh | bash
 set -euo pipefail
 
 REPO="MobileOps-Team/mobileops-cli"

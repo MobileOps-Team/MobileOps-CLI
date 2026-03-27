@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/MobileOps-Team/mobileops-cli/internal/client"
 	"github.com/MobileOps-Team/mobileops-cli/internal/envelope"
 	"github.com/MobileOps-Team/mobileops-cli/internal/formatter"
@@ -18,6 +20,17 @@ var invoiceStatementsListCmd = &cobra.Command{
 	RunE:  runInvoiceStatementsList,
 }
 
+var invoiceStatementsUpdateCmd = &cobra.Command{
+	Use:   "update ID",
+	Short: "Update an invoice statement",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runInvoiceStatementsUpdate,
+}
+
+var invoiceStatementFlags = map[string]string{
+	"integration-status": "integration_status",
+}
+
 func init() {
 	invoiceStatementsListCmd.Flags().Int("page", 1, "Page number")
 	invoiceStatementsListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
@@ -27,7 +40,10 @@ func init() {
 	invoiceStatementsListCmd.Flags().String("to", "", "End date (YYYY-MM-DD)")
 	invoiceStatementsListCmd.Flags().Bool("include-jobs", false, "Include job data")
 
+	invoiceStatementsUpdateCmd.Flags().String("integration-status", "", "Integration status")
+
 	invoiceStatementsCmd.AddCommand(invoiceStatementsListCmd)
+	invoiceStatementsCmd.AddCommand(invoiceStatementsUpdateCmd)
 }
 
 func runInvoiceStatementsList(cmd *cobra.Command, args []string) error {
@@ -60,6 +76,27 @@ func runInvoiceStatementsList(cmd *cobra.Command, args []string) error {
 
 	env := envelope.WrapCollection(response, "invoice statements", []string{
 		"mobileops jobs list",
+	})
+	formatter.Output(env, jsonOutput)
+	return nil
+}
+
+func runInvoiceStatementsUpdate(cmd *cobra.Command, args []string) error {
+	id := args[0]
+	c, err := client.New("", "", "", envFlag)
+	if err != nil {
+		return handleClientError(err)
+	}
+
+	body := bodyFromFlags(cmd, invoiceStatementFlags)
+
+	response, err := c.Put(fmt.Sprintf("invoice-statements/%s", id), wrapBody("invoice_statement", body))
+	if err != nil {
+		return handleClientError(err)
+	}
+
+	env := envelope.WrapRecord(response, "Invoice statement updated", []string{
+		"mobileops invoice-statements list",
 	})
 	formatter.Output(env, jsonOutput)
 	return nil

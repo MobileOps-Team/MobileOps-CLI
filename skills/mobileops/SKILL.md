@@ -23,13 +23,37 @@ curl -fsSL https://www.mobileops.at/install-cli | bash
 mobileops auth login
 ```
 
+## Terminology Aliases
+
+Users may use different terms for the same concepts. Always map to the correct CLI command:
+
+| User says | CLI command | Notes |
+|-----------|-------------|-------|
+| asset, boat, ship, barge, tug, fleet | `vessels` | "Vessel" is the CLI term for any maritime asset |
+| user, employee, team member, worker, staff, people | `crew` | All personnel are managed under `crew` |
+| task, work order, maintenance job | `jobs` | Scheduled work assignments |
+| equipment, machinery, system | `components` | Equipment installed on a vessel |
+| spare, supply, inventory | `parts` | Parts belong to components |
+| issue, problem, ticket | `work-requests` | Reported issues needing resolution |
+| finding, audit item | `deficiencies` | Issues found during inspections |
+| NCR, non-conformance | `nonconformities` | Compliance violations |
+| certificate, cert, license, doc | `vessel-documents` or `personnel-documents` | Depends on whether it belongs to a vessel or person |
+| PM, preventive maintenance, routine | `routine-templates` / `routine-calculations` | Templates define schedules; calculations show due dates |
+| PO | `purchase-orders` | Purchase orders |
+| vendor | `suppliers` | Parts/service providers |
+| manufacturer, brand | `makes` | Equipment manufacturers |
+| position, role, title | `employee-positions` | Crew job titles |
+| department, fleet group | `divisions` | Organizational groupings |
+
+When a user asks about "assets" or "boats", use `mobileops vessels`. When they ask about "employees", use `mobileops crew`. Always translate to the correct CLI resource name.
+
 ## Global Flags
 
 | Flag | Description |
 |------|-------------|
 | `--json` | Output as structured JSON with envelope (ok, data, summary, breadcrumbs) |
 | `--help --agent` | Machine-readable help for AI agents |
-| `--env <name>` | Environment: production (default), development, gamma |
+| `--env <name>` | Environment (default: production) |
 
 ## Always Use --json
 
@@ -59,8 +83,6 @@ Response envelope:
 
 ```bash
 mobileops auth login                          # Authenticate (production)
-mobileops auth login --env development        # Authenticate (localhost:3000)
-mobileops auth login --env gamma              # Authenticate (gamma)
 mobileops auth status                         # Check current auth status
 mobileops auth logout                         # Remove stored credentials
 ```
@@ -936,14 +958,6 @@ mobileops vessels list --page 2 --limit 50 --json
 ```
 
 Default: page 1, limit 10. Maximum limit: 100.
-
-## Environments
-
-| Environment | Host | Use |
-|-------------|------|-----|
-| production (default) | https://www.mobileops.at | Live data |
-| gamma | https://gamma.mobileops.at | Staging/testing |
-| development | http://localhost:3000 | Local development |
 
 ## Error Handling
 
