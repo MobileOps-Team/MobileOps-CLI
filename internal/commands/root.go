@@ -5,13 +5,15 @@ import (
 	"os"
 
 	"github.com/MobileOps-Team/mobileops-cli/internal/agent"
+	"github.com/MobileOps-Team/mobileops-cli/internal/updater"
 	"github.com/spf13/cobra"
 )
 
 var (
-	jsonOutput bool
-	agentMode  bool
-	envFlag    string
+	jsonOutput     bool
+	agentMode      bool
+	envFlag        string
+	versionCheckCh <-chan string
 )
 
 // rootCmd is the base command for the CLI.
@@ -24,6 +26,18 @@ var rootCmd = &cobra.Command{
 		if agentMode {
 			agent.Generate()
 			os.Exit(0)
+		}
+
+		if cmd.Name() != "update" {
+			versionCheckCh = updater.CheckVersionBackground(cliVersion)
+		}
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		if versionCheckCh == nil {
+			return
+		}
+		if latest := <-versionCheckCh; latest != "" {
+			fmt.Fprintf(os.Stderr, "\n\u26a0 Update available: v%s \u2192 v%s\n  Run: mobileops update\n", cliVersion, latest)
 		}
 	},
 }
@@ -69,6 +83,7 @@ func init() {
 	rootCmd.AddCommand(wheelhouseLogsCmd)
 	rootCmd.AddCommand(cargoTypesCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(treeCmd)
 }
 
