@@ -37,6 +37,7 @@ Users may use different terms for the same concepts. Always map to the correct C
 | issue, problem, ticket | `work-requests` | Reported issues needing resolution |
 | finding, audit item | `deficiencies` | Issues found during inspections |
 | NCR, non-conformance | `nonconformities` | Compliance violations |
+| observation, audit observation, SIRE finding | `observations` | Observations recorded against an audit (e.g. SIRE Inspection) |
 | certificate, cert, license, doc | `vessel-documents` or `personnel-documents` | Depends on whether it belongs to a vessel or person |
 | PM, preventive maintenance, routine | `routine-templates` / `routine-calculations` | Templates define schedules; calculations show due dates |
 | PO | `purchase-orders` | Purchase orders |
@@ -291,6 +292,40 @@ mobileops nonconformities update <id> --status "resolved" --corrective-actions "
 **API: GET /api/nonconformities, GET /api/nonconformities/:id, POST /api/nonconformities, PUT /api/nonconformities/:id**
 
 Writable fields: `--user-id`, `--date`, `--vessel-id`, `--plan-of-action`, `--description`, `--status`, `--priority`, `--notification-group-id`, `--root-cause`, `--corrective-actions`, `--location`, `--manager-notes`, `--resolution-date`, `--major` (bool), `--external` (bool), `--shoreside` (bool), `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
+
+---
+
+### Observations
+
+```bash
+# List observations
+mobileops observations list --vessel-id <vessel_id> --json
+
+# Pull all observations connected to SIRE Inspection audits (the "SIRE report")
+mobileops observations list --audit-type "SIRE Inspection" --json
+
+# All observations linked to a specific audit
+mobileops observations list --audit-id <audit_id> --json
+
+# Get a specific observation
+mobileops observations get <id> --json
+
+# Create an observation (optionally tied to an audit)
+mobileops observations create --vessel-id <id> --user-id <id> --description "Hose leak" --audit-id <audit_id> --json
+
+# Update an observation
+mobileops observations update <id> --status "Resolved" --corrective-actions "Replaced hose" --json
+
+# Filters: --audit-type, --audit-id, --vessel-id, --component-id, --part-id, --start-date, --end-date, --status
+```
+
+**API: GET /api/observations, GET /api/observations/:id, POST /api/observations, PATCH /api/observations/:id**
+
+Each observation in the response includes an embedded `audit` object (id, type, custom_type_name, name, status, date, completion_date, external_auditor_name, vessel_id, vessel_name) when `audit_id` is set, so a SIRE/audit report does not require a second call.
+
+`--audit-type` accepts the literal Audit type — built-in values: `SIRE Inspection`, `External Audit`, `External Survey`, `External Dry Dock Survey`, `Internal Audit`, `Internal Survey`, `Internal Dry Dock Survey`, `Internal Inspection` — or any per-company custom category name. Match is exact and case-sensitive.
+
+Writable fields: `--user-id`, `--date`, `--vessel-id`, `--description`, `--corrective-actions`, `--plan-of-action`, `--status`, `--notification-group-id`, `--resolution-date`, `--manager-notes`, `--reference-number`, `--assigned-to-id`, `--assigned-to`, `--audit-id`, `--routine-id`, `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
 
 ---
 
@@ -820,6 +855,7 @@ Writable fields: `--name`, `--reference-number`, `--color`, `--measurement-ids` 
 | work-requests | ✅ | ✅ | — |
 | deficiencies | ✅ | ✅ | — |
 | nonconformities | ✅ | ✅ | — |
+| observations | ✅ | ✅ | — |
 | maintenance-reports | ✅ | ✅ | — |
 | vessel-documents | ✅ | ✅ | ✅ |
 | personnel-documents | ✅ | ✅ | ✅ |

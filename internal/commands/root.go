@@ -56,6 +56,7 @@ func init() {
 	rootCmd.AddCommand(workRequestsCmd)
 	rootCmd.AddCommand(deficienciesCmd)
 	rootCmd.AddCommand(nonconformitiesCmd)
+	rootCmd.AddCommand(observationsCmd)
 	rootCmd.AddCommand(maintenanceReportsCmd)
 	rootCmd.AddCommand(vesselDocumentsCmd)
 	rootCmd.AddCommand(personnelDocumentsCmd)
