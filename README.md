@@ -74,6 +74,21 @@ Every command supports `--json` for structured output:
 
 Breadcrumbs suggest next commands, making it easy for humans and agents to navigate.
 
+## Keeping up with the REST API
+
+The CLI is checked against the published OpenAPI spec
+(https://www.mobileops.at/openapi.yaml):
+
+```bash
+make api-check
+```
+
+This fails when the API has an operation the CLI does not cover, or when a
+command calls an operation the API no longer offers. The mapping lives in
+`internal/commands/api_map.go`; the same map feeds `mobileops --help --agent`.
+See [CLAUDE.md](CLAUDE.md) for the step-by-step update procedure. The check
+also runs weekly in CI (`.github/workflows/api-coverage.yml`).
+
 ## Authentication
 
 Get your API keys from **Settings > REST API** in MobileOps, then:

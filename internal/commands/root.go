@@ -22,12 +22,6 @@ var rootCmd = &cobra.Command{
 	Short: "CLI for the MobileOps API",
 	Long:  "CLI for managing vessels, jobs, crew, and operations via the MobileOps API",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// If --agent and --help are both set, print agent manifest and exit
-		if agentMode {
-			agent.Generate()
-			os.Exit(0)
-		}
-
 		if cmd.Name() != "update" {
 			versionCheckCh = updater.CheckVersionBackground(cliVersion)
 		}
@@ -46,6 +40,15 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&jsonOutput, "json", false, "Output as JSON")
 	rootCmd.PersistentFlags().BoolVar(&agentMode, "agent", false, "Machine-readable help (use with --help)")
 	rootCmd.PersistentFlags().StringVar(&envFlag, "env", "", "Environment: production, gamma, development, test")
+
+	defaultHelp := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		if agentMode {
+			agent.Generate(cmd.Root(), apiCoverage)
+			return
+		}
+		defaultHelp(cmd, args)
+	})
 
 	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(vesselsCmd)
@@ -83,6 +86,12 @@ func init() {
 	rootCmd.AddCommand(purchaseOrdersCmd)
 	rootCmd.AddCommand(wheelhouseLogsCmd)
 	rootCmd.AddCommand(cargoTypesCmd)
+	rootCmd.AddCommand(auditsCmd)
+	rootCmd.AddCommand(eventsCmd)
+	rootCmd.AddCommand(workRestsCmd)
+	rootCmd.AddCommand(codesCmd)
+	rootCmd.AddCommand(fuelLevelReadingsCmd)
+	rootCmd.AddCommand(bunkerPartitionsCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(treeCmd)

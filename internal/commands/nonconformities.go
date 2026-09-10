@@ -96,8 +96,6 @@ func init() {
 	nonconformitiesListCmd.Flags().Int("page", 1, "Page number")
 	nonconformitiesListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
 	nonconformitiesListCmd.Flags().String("vessel-id", "", "Filter by vessel ID")
-	nonconformitiesListCmd.Flags().String("component-id", "", "Filter by component ID")
-	nonconformitiesListCmd.Flags().String("part-id", "", "Filter by part ID")
 
 	addNonconformityWriteFlags(nonconformitiesCreateCmd)
 	addNonconformityWriteFlags(nonconformitiesUpdateCmd)
@@ -117,12 +115,6 @@ func runNonconformitiesList(cmd *cobra.Command, args []string) error {
 	params := paginationParams(cmd)
 	if v, _ := cmd.Flags().GetString("vessel-id"); v != "" {
 		params["vessel_id"] = v
-	}
-	if v, _ := cmd.Flags().GetString("component-id"); v != "" {
-		params["component_id"] = v
-	}
-	if v, _ := cmd.Flags().GetString("part-id"); v != "" {
-		params["part_id"] = v
 	}
 
 	response, err := c.Get("nonconformities", params)

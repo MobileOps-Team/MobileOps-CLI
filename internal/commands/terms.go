@@ -33,13 +33,6 @@ var termsCreateCmd = &cobra.Command{
 	RunE:  runTermsCreate,
 }
 
-var termsUpdateCmd = &cobra.Command{
-	Use:   "update ID",
-	Short: "Update a term",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runTermsUpdate,
-}
-
 var termFlags = map[string]string{
 	"make-id":        "make_id",
 	"model-id":       "model_id",
@@ -70,12 +63,10 @@ func init() {
 	termsGetCmd.Flags().String("supplier-id", "", "Parent supplier ID (required)")
 
 	addTermWriteFlags(termsCreateCmd)
-	addTermWriteFlags(termsUpdateCmd)
 
 	termsCmd.AddCommand(termsListCmd)
 	termsCmd.AddCommand(termsGetCmd)
 	termsCmd.AddCommand(termsCreateCmd)
-	termsCmd.AddCommand(termsUpdateCmd)
 }
 
 func runTermsList(cmd *cobra.Command, args []string) error {
@@ -144,27 +135,6 @@ func runTermsCreate(cmd *cobra.Command, args []string) error {
 	termID := envelope.ExtractID(response)
 	env := envelope.WrapRecord(response, "Term created", []string{
 		fmt.Sprintf("mobileops terms get %s", termID),
-	})
-	formatter.Output(env, jsonOutput)
-	return nil
-}
-
-func runTermsUpdate(cmd *cobra.Command, args []string) error {
-	id := args[0]
-	c, err := client.New("", "", "", envFlag)
-	if err != nil {
-		return handleClientError(err)
-	}
-
-	body := bodyFromFlags(cmd, termFlags)
-
-	response, err := c.Put(fmt.Sprintf("terms/%s", id), wrapBody("term", body))
-	if err != nil {
-		return handleClientError(err)
-	}
-
-	env := envelope.WrapRecord(response, "Term updated", []string{
-		fmt.Sprintf("mobileops terms get %s", id),
 	})
 	formatter.Output(env, jsonOutput)
 	return nil

@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/MobileOps-Team/mobileops-cli/internal/config"
+	"github.com/MobileOps-Team/mobileops-cli/internal/version"
 )
 
 const (
-	version       = "0.1.0"
 	maxRetries    = 2
 	retryInterval = 500 * time.Millisecond
 	backoffFactor = 2
@@ -154,12 +154,18 @@ func (c *Client) Get(path string, params map[string]string) (map[string]interfac
 
 // Post performs a POST request to the API.
 func (c *Client) Post(path string, body map[string]interface{}) (map[string]interface{}, error) {
-	return c.mutate("POST", path, body)
+	return c.mutate("POST", path, nil, body)
+}
+
+// PostWithParams performs a POST request that also carries query parameters
+// (used by search-style endpoints that paginate through the query string).
+func (c *Client) PostWithParams(path string, params map[string]string, body map[string]interface{}) (map[string]interface{}, error) {
+	return c.mutate("POST", path, params, body)
 }
 
 // Put performs a PUT request to the API.
 func (c *Client) Put(path string, body map[string]interface{}) (map[string]interface{}, error) {
-	return c.mutate("PUT", path, body)
+	return c.mutate("PUT", path, nil, body)
 }
 
 // Delete performs a DELETE request to the API.
@@ -179,11 +185,19 @@ func (c *Client) Delete(path string) (map[string]interface{}, error) {
 	return c.doWithRetry(req)
 }
 
-func (c *Client) mutate(method, path string, body map[string]interface{}) (map[string]interface{}, error) {
+func (c *Client) mutate(method, path string, params map[string]string, body map[string]interface{}) (map[string]interface{}, error) {
 	apiPath := c.apiPath(path)
 	u, err := url.Parse(c.host + apiPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(params) > 0 {
+		q := u.Query()
+		for k, v := range params {
+			q.Set(k, v)
+		}
+		u.RawQuery = q.Encode()
 	}
 
 	jsonBody, err := json.Marshal(body)
@@ -210,7 +224,7 @@ func (c *Client) setHeaders(req *http.Request) {
 	req.Header.Set("X-Api-Secret-Key", c.secretKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "mobileops-cli/"+version)
+	req.Header.Set("User-Agent", "mobileops-cli/"+version.Version)
 }
 
 func (c *Client) doWithRetry(req *http.Request) (map[string]interface{}, error) {
@@ -252,6 +266,10 @@ func (c *Client) handleResponse(resp *http.Response) (map[string]interface{}, er
 
 	switch {
 	case resp.StatusCode >= 200 && resp.StatusCode < 300:
+		// A bare JSON "null" (e.g. a by_code lookup with no match) is a miss.
+		if result == nil && strings.TrimSpace(string(body)) == "null" {
+			return nil, &NotFoundError{}
+		}
 		// Check for API-level errors returned as 200
 		if errField, ok := result["error"]; ok {
 			errStr, _ := errField.(string)

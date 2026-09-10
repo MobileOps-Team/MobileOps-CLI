@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -109,4 +110,27 @@ func wrapBody(key string, body map[string]interface{}) map[string]interface{} {
 		return body
 	}
 	return map[string]interface{}{key: body}
+}
+
+func bodyFromJSONFlags(cmd *cobra.Command, body map[string]interface{}, flagMap map[string]string) error {
+	for flag, param := range flagMap {
+		if !cmd.Flags().Changed(flag) {
+			continue
+		}
+		raw, _ := cmd.Flags().GetString(flag)
+		var parsed interface{}
+		if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+			return fmt.Errorf("--%s must be valid JSON: %v", flag, err)
+		}
+		body[param] = parsed
+	}
+	return nil
+}
+
+func listFilters(cmd *cobra.Command, params map[string]string, flagMap map[string]string) {
+	for flag, param := range flagMap {
+		if v, _ := cmd.Flags().GetString(flag); v != "" {
+			params[param] = v
+		}
+	}
 }

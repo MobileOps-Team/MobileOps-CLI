@@ -41,7 +41,13 @@ Users may use different terms for the same concepts. Always map to the correct C
 | certificate, cert, license, doc | `vessel-documents` or `personnel-documents` | Depends on whether it belongs to a vessel or person |
 | PM, preventive maintenance, routine | `routine-templates` / `routine-calculations` | Templates define schedules; calculations show due dates |
 | PO | `purchase-orders` | Purchase orders |
-| vendor | `suppliers` | Parts/service providers |
+| vendor | `suppliers` | Parts/service providers (read-only) |
+| audit, inspection, SIRE, survey | `audits` | Audits embed their observations, deficiencies and nonconformities |
+| hours of rest, work/rest, fatigue log | `work-rests` | One record per user per day |
+| event, timeline entry, wheelhouse event, job log | `events search` | Read-only search; events are created in the app |
+| code, accounting code, billing code, job code | `codes` | Company-wide or scoped to one vessel |
+| fuel reading, tank level, sounding | `fuel-level-readings` | Tank levels over time |
+| fuel lift, bunker, fuel consumption | `bunker-partitions` | One lift plus the consumption drawn from it |
 | manufacturer, brand | `makes` | Equipment manufacturers |
 | position, role, title | `employee-positions` | Crew job titles |
 | department, fleet group | `divisions` | Organizational groupings |
@@ -97,8 +103,9 @@ mobileops auth logout                         # Remove stored credentials
 mobileops vessels list --json
 mobileops vessels list --division-id <division_id> --json
 
-# Get a specific vessel
+# Get a specific vessel (by numeric ID, or by its code)
 mobileops vessels get <id> --json
+mobileops vessels get <code> --by-code --json
 
 # Create a vessel
 mobileops vessels create --name "MV Atlantic" --division-id <id> --vessel-type-id <id> --json
@@ -114,7 +121,7 @@ mobileops vessels specs <vessel_id> --json
 
 **API: GET /api/assets, GET /api/assets/:id, POST /api/assets, PUT /api/assets/:id**
 
-Writable fields: `--name`, `--division-id`, `--status`, `--category`, `--vessel-type-id`, `--customer-id`, `--customer-name`, `--imo-number`, `--uscg-number`, `--mmsi-number`, `--call-sign`, `--color`, `--length`, `--height`, `--width`, `--dimension-unit`, `--active` (bool), `--voyage-enabled` (bool), `--external` (bool)
+Writable fields: `--name`, `--division-id`, `--status` (In Service, Out of Service, In Repair, Tied Up, or a company status), `--category`, `--vessel-type-id`, `--vessel-type-subtype-id`, `--customer-id`, `--customer-name`, `--imo-number`, `--uscg-number`, `--mmsi-number`, `--call-sign`, `--color`, `--length`, `--height`, `--width`, `--dimension-unit`, `--activation-date`, `--specifications`, `--active` (bool), `--voyage-enabled` (bool), `--external` (bool), `--notify-sync` (bool), `--tow-diagram-enabled` (bool)
 
 ---
 
@@ -125,6 +132,7 @@ Writable fields: `--name`, `--division-id`, `--status`, `--category`, `--vessel-
 mobileops jobs list --json
 mobileops jobs list --vessel-id <vessel_id> --json
 mobileops jobs list --from 2026-01-01 --to 2026-03-31 --json
+mobileops jobs list --status LAUNCHED,IN_PROGRESS --json
 
 # Get a specific job
 mobileops jobs get <id> --json
@@ -135,10 +143,21 @@ mobileops jobs create --from 2026-04-01 --to 2026-04-15 --notes "Engine overhaul
 # Update a job
 mobileops jobs update <id> --notes "Updated notes" --cancel --json
 
-# Filters: --vessel-id, --from, --to, --active-only
+# Is a vessel free? Returns the jobs that overlap the window (empty = free)
+mobileops jobs vessel-availability --vessel-id <vessel_id> --from 2026-04-01 --to 2026-04-15 --json
+
+# Job report rows from the reporting engine (detailed by default)
+mobileops jobs export --from 2026-04-01 --to 2026-04-30 --json
+mobileops jobs export --from 2026-04-01 --to 2026-04-30 --simple --json
+mobileops jobs export --from 2026-04-01 --to 2026-04-30 --actuals --json   # planned vs actual segments
+mobileops jobs export --from 2026-04-01 --to 2026-04-30 --dispatch-segment-template-id <id> --json
+
+# Filters: --vessel-id, --from, --to, --active-only, --status
 ```
 
-**API: GET /api/jobs, GET /api/jobs/:id, POST /api/jobs, PUT /api/jobs/:id**
+**API: GET /api/jobs, GET /api/jobs/:id, POST /api/jobs, PUT /api/jobs/:id, POST /api/jobs/vessel-availability, POST /api/jobs/job-export**
+
+`--status` takes one or more of `NOT_READY`, `READY`, `LAUNCHED`, `IN_PROGRESS`, `COMPLETE`, `JOB_CANCELED`, `JOB_RESCHEDULED` (comma-separated). `--active-only` is the shorthand for everything except NOT_READY, JOB_CANCELED and JOB_RESCHEDULED. Deleting a launched job is not possible; set `--cancel` instead.
 
 Writable fields: `--from` (date_beginning), `--to` (date_ending), `--notes`, `--user-id`, `--division-id`, `--po-number`, `--ref-number`, `--tbd` (bool), `--cancel` (bool), `--vessels` (comma-separated), `--customers` (comma-separated), `--work-types` (comma-separated), `--locations` (comma-separated)
 
@@ -170,7 +189,7 @@ mobileops crew delete <id> --json
 
 **API: GET /api/users, GET /api/users/:id, GET /api/users/by_employee_number, POST /api/users, PUT /api/users/:id, DELETE /api/users/:id**
 
-Writable fields: `--first-name`, `--last-name`, `--email`, `--password`, `--phone`, `--time-zone`, `--address`, `--birthday`, `--passport-number`, `--mmc-number`, `--employee-number`, `--receive-notifications` (bool), `--login-disabled` (bool), `--archived` (bool), `--division-ids` (comma-separated), `--employee-positions` (comma-separated), `--primary-assets` (comma-separated)
+Writable fields: `--first-name`, `--last-name`, `--email`, `--password`, `--password-confirmation` (required on create, 8-128 chars), `--phone`, `--time-zone`, `--address`, `--birthday`, `--passport-number`, `--mmc-number`, `--employee-number`, `--employee-code`, `--archived-date`, `--receive-notifications` (bool), `--login-disabled` (bool), `--archived` (bool), `--exclude-tr` (bool), `--division-ids` (comma-separated), `--employee-positions` (comma-separated), `--primary-assets` (comma-separated), `--roles` (comma-separated; replaces roles wholesale, admin roles are stripped)
 
 ---
 
@@ -189,7 +208,7 @@ mobileops components create --name "Main Engine" --vessel-id <id> --has-hours --
 # Update a component
 mobileops components update <id> --hours "1500" --critical --json
 
-# Filters: --vessel-id, --component-id, --part-id
+# Filters: --vessel-id
 ```
 
 **API: GET /api/components, GET /api/components/:id, POST /api/components, PUT /api/components/:id**
@@ -213,7 +232,7 @@ mobileops parts create --name "Oil Filter" --vessel-id <id> --component-id <id> 
 # Update a part
 mobileops parts update <id> --hours "500" --critical --json
 
-# Filters: --vessel-id, --component-id, --part-id
+# Filters: --vessel-id, --component-id
 ```
 
 **API: GET /api/parts, GET /api/parts/:id, POST /api/parts, PUT /api/parts/:id**
@@ -286,7 +305,7 @@ mobileops nonconformities create --vessel-id <id> --description "Safety protocol
 # Update a nonconformity
 mobileops nonconformities update <id> --status "resolved" --corrective-actions "Retrained crew" --json
 
-# Filters: --vessel-id, --component-id, --part-id
+# Filters: --vessel-id
 ```
 
 **API: GET /api/nonconformities, GET /api/nonconformities/:id, POST /api/nonconformities, PUT /api/nonconformities/:id**
@@ -316,10 +335,10 @@ mobileops observations create --vessel-id <id> --user-id <id> --description "Hos
 # Update an observation
 mobileops observations update <id> --status "Resolved" --corrective-actions "Replaced hose" --json
 
-# Filters: --audit-type, --audit-id, --vessel-id, --component-id, --part-id, --start-date, --end-date, --status
+# Filters: --audit-type, --audit-id, --vessel-id, --start-date, --end-date, --status
 ```
 
-**API: GET /api/observations, GET /api/observations/:id, POST /api/observations, PATCH /api/observations/:id**
+**API: GET /api/observations, GET /api/observations/:id, POST /api/observations, PUT /api/observations/:id**
 
 Each observation in the response includes an embedded `audit` object (id, type, custom_type_name, name, status, date, completion_date, external_auditor_name, vessel_id, vessel_name) when `audit_id` is set, so a SIRE/audit report does not require a second call.
 
@@ -422,18 +441,18 @@ mobileops vessel-specs list --vessel-id <vessel_id> --json
 # Get a specific vessel spec
 mobileops vessel-specs get <id> --json
 
-# Create a vessel spec
-mobileops vessel-specs create --vessel-id <id> --template-id <id> --name "Engine Specs" --json
+# Create a vessel spec (one per vessel; spec-fields keys must exist on the template)
+mobileops vessel-specs create --vessel-id <id> --template-id <id> --spec-fields '{"length":"120 ft","engine":"CAT C32"}' --json
 
 # Update a vessel spec
-mobileops vessel-specs update <id> --name "Updated Engine Specs" --json
+mobileops vessel-specs update <id> --template-id <id> --spec-fields '{"engine":"CAT C32 ACERT"}' --json
 
 # Filters: --vessel-id
 ```
 
 **API: GET /api/vessel-specs, GET /api/vessel-specs/:id, POST /api/vessel-specs, PUT /api/vessel-specs/:id**
 
-Writable fields: `--name`, `--vessel-id`, `--template-id`
+Writable fields: `--vessel-id`, `--template-id` (required), `--spec-fields` (JSON object keyed by template field). `spec-fields` is filtered against the stored template, so change the template in one call and send its values in a second.
 
 ---
 
@@ -463,13 +482,17 @@ mobileops customers get <id> --json
 # Create a customer
 mobileops customers create --name "Acme Shipping" --email-address "info@acme.com" --json
 
-# Update a customer
-mobileops customers update <id> --phone "+1234567890" --add-vessels <id1>,<id2> --json
+# Create a customer together with its own vessels
+mobileops customers create --name "Acme Shipping" --add-vessels "Barge 1,Barge 2" --json
+
+# Update a customer; add vessels by name, remove them by the key from the customer's vessels map
+mobileops customers update <id> --phone "+1234567890" --add-vessels "Barge 3" --json
+mobileops customers update <id> --remove-vessels <vessel_key> --json
 ```
 
 **API: GET /api/customers, GET /api/customers/:id, POST /api/customers, PUT /api/customers/:id**
 
-Writable fields: `--name`, `--address`, `--city`, `--postal-code`, `--state-province`, `--country`, `--email-address`, `--phone`, `--hex-color`, `--third-party` (bool), `--add-vessels` (comma-separated)
+Writable fields: `--name`, `--address`, `--city`, `--postal-code`, `--state-province`, `--country`, `--email-address`, `--phone`, `--hex-color`, `--third-party` (bool), `--add-vessels` (comma-separated vessel *names*), `--remove-vessels` (update only; comma-separated vessel *keys*). Customer vessels are the customer-owned boats a job can be booked against; each is stored under a generated key that appears in the customer's `vessels` map.
 
 ---
 
@@ -481,17 +504,9 @@ mobileops suppliers list --json
 
 # Get a specific supplier
 mobileops suppliers get <id> --json
-
-# Create a supplier
-mobileops suppliers create --name "Marine Parts Co" --email-address "sales@marineparts.com" --json
-
-# Update a supplier
-mobileops suppliers update <id> --notes "Preferred vendor" --phone "+1234567890" --json
 ```
 
-**API: GET /api/suppliers, GET /api/suppliers/:id, POST /api/suppliers, PUT /api/suppliers/:id**
-
-Writable fields: `--name`, `--notes`, `--address`, `--city`, `--postal-code`, `--country`, `--state-province`, `--email-address`, `--phone`
+**API: GET /api/suppliers, GET /api/suppliers/:id (read-only; suppliers are managed in the app)**
 
 ---
 
@@ -504,14 +519,11 @@ mobileops makes list --json
 # Get a specific make
 mobileops makes get <id> --json
 
-# Create a make
+# Create a make (create the make first, then the models filed under it)
 mobileops makes create --name "Caterpillar" --json
-
-# Update a make
-mobileops makes update <id> --phone "+1234567890" --json
 ```
 
-**API: GET /api/makes, GET /api/makes/:id, POST /api/makes, PUT /api/makes/:id**
+**API: GET /api/makes, GET /api/makes/:id, POST /api/makes (no update through the API)**
 
 Writable fields: `--name`, `--address`, `--city`, `--postal-code`, `--country`, `--state-province`, `--email-address`, `--phone`
 
@@ -526,16 +538,13 @@ mobileops models list --make-id <make_id> --json
 # Get a specific model
 mobileops models get <id> --make-id <make_id> --json
 
-# Create a model
+# Create a model (starts with quantity 0)
 mobileops models create --make-id <id> --name "C32 ACERT" --part-number "CAT-C32" --json
-
-# Update a model
-mobileops models update <id> --unit-cost "15000" --notes "Updated pricing" --json
 ```
 
-**API: GET /api/models, GET /api/models/:id, POST /api/models, PUT /api/models/:id**
+**API: GET /api/models, GET /api/models/:id, POST /api/models (no update through the API)**
 
-Writable fields: `--make-id`, `--serial-number`, `--name`, `--part-number`, `--notes`, `--vessel-id`, `--unit-cost`, `--expected-lifetime-hours`, `--critical` (bool)
+Writable fields: `--make-id`, `--serial-number`, `--name`, `--part-number`, `--notes`, `--vessel-id`, `--unit-cost`, `--expected-lifetime-hours`, `--critical-spares-threshold`, `--critical` (bool)
 
 ---
 
@@ -657,10 +666,15 @@ mobileops invoice-statements list --json
 mobileops invoice-statements list --status <status> --from 2026-01-01 --to 2026-03-31 --json
 mobileops invoice-statements list --include-jobs --json
 
+# Mark a statement as pushed to an external accounting system
+mobileops invoice-statements update <id> --integration-status "synced" --json
+
 # Filters: --status, --integration-status, --from, --to, --include-jobs
 ```
 
-**API: GET /api/invoice-statements (read-only)**
+**API: GET /api/invoice-statements, PUT /api/invoice-statements/:id**
+
+`integration_status` is the only writable field: a free-form marker for where the statement stands in an external system. Poll with `--integration-status` to find statements not yet pushed.
 
 ---
 
@@ -699,7 +713,7 @@ mobileops forms list --json
 mobileops routine-templates list --json
 mobileops routine-templates list --vessel-id <vessel_id> --json
 
-# Filters: --vessel-id, --component-id, --part-id, --category, --type, --frequency-type
+# Filters: --id (single template, other filters ignored), --vessel-id, --component-id, --part-id, --category, --type, --frequency-type, --master (true/false), --master-id, --universal (true/false)
 ```
 
 **API: GET /api/routine-templates (read-only)**
@@ -714,7 +728,10 @@ mobileops routine-calculations list --json
 mobileops routine-calculations list --vessel-id <vessel_id> --json
 mobileops routine-calculations list --due-date-lte 2026-04-01 --json
 
-# Filters: --vessel-id, --component-id, --part-id, --division-id, --frequency-type, --value-lte, --value-gte, --due-date-lte, --due-date-gte, --routine-template-id, --master-template-id
+# Filters: --vessel-id, --component-id, --part-id, --division-id, --frequency-type, --value-lte, --value-gte, --due-date-lte, --due-date-gte, --routine-template-id, --master-template-id, --component-risk-score (>=, 1-10), --part-risk-score (>=, 1-10)
+
+# `value` is the distance to due in the frequency's unit (days for time-based routines, hours for
+# component-hour routines) and is negative when overdue, so `--value-lte 0` = everything due or overdue.
 ```
 
 **API: GET /api/routine-calculations (read-only)**
@@ -759,15 +776,13 @@ When `--sum` is used, returns aggregated hours and fuel consumption by component
 
 ```bash
 # List part requests
-mobileops part-requests list --vessel-id <vessel_id> --json
+mobileops part-requests list --json
 
 # Get a specific part request
 mobileops part-requests get <id> --json
-
-# Filters: --vessel-id, --component-id, --part-id
 ```
 
-**API: GET /api/part-requests, GET /api/part-requests/:id (read-only in practice)**
+**API: GET /api/part-requests, GET /api/part-requests/:id (read-only; no list filters)**
 
 ---
 
@@ -780,14 +795,11 @@ mobileops terms list --supplier-id <supplier_id> --json
 # Get a specific term
 mobileops terms get <id> --supplier-id <supplier_id> --json
 
-# Create a term
-mobileops terms create --supplier-id <id> --model-id <id> --price "1500.00" --date-beginning "2026-01-01" --date-ending "2026-12-31" --json
-
-# Update a term
-mobileops terms update <id> --price "1600.00" --notes "Price increase" --json
+# Create a term (price is stored as a whole number; decimals are truncated)
+mobileops terms create --supplier-id <id> --model-id <id> --price "1500" --date-beginning "2026-01-01" --date-ending "2026-12-31" --json
 ```
 
-**API: GET /api/terms, GET /api/terms/:id, POST /api/terms, PUT /api/terms/:id**
+**API: GET /api/terms, GET /api/terms/:id, POST /api/terms (no update through the API)**
 
 Writable fields: `--make-id`, `--model-id`, `--model-title`, `--supplier-id`, `--price`, `--notes`, `--date-beginning`, `--date-ending`
 
@@ -829,17 +841,124 @@ mobileops cargo-types list --json
 
 # Get a specific cargo type
 mobileops cargo-types get <id> --json
-
-# Create a cargo type
-mobileops cargo-types create --name "Crude Oil" --color "#8B4513" --measurement-ids <id1>,<id2> --json
-
-# Update a cargo type
-mobileops cargo-types update <id> --reference-number "CT-001" --json
 ```
 
-**API: GET /api/cargo-types, GET /api/cargo-types/:id, POST /api/cargo-types, PUT /api/cargo-types/:id**
+**API: GET /api/cargo-types, GET /api/cargo-types/:id (read-only; cargo types are managed in the app)**
 
-Writable fields: `--name`, `--reference-number`, `--color`, `--measurement-ids` (comma-separated)
+---
+
+### Audits
+
+```bash
+# List audits, newest first (SIRE inspections, internal/external audits, surveys, dry dock surveys)
+mobileops audits list --json
+mobileops audits list --limit 50 --json
+
+# Then drill into the observations of one audit
+mobileops observations list --audit-id <audit_id> --json
+```
+
+**API: GET /api/audits (read-only, no filters)**
+
+Each audit embeds its `observations`, `deficiencies` and `nonconformities`, so larger pages cost more. To find every SIRE finding across audits use `observations list --audit-type "SIRE Inspection"` instead.
+
+---
+
+### Work Rests (Hours of Rest)
+
+```bash
+# List work/rest logs, newest first (one record per user per day)
+mobileops work-rests list --json
+mobileops work-rests list --user-id <user_id> --from 2026-03-01 --to 2026-03-31 --json
+mobileops work-rests list --vessel-ids <id1>,<id2> --json
+
+# Filters: --from, --to, --user-id, --vessel-ids, --employee-position-ids, --employee-rate-ids (all ID filters comma-separated)
+```
+
+**API: GET /api/work-rests (read-only)**
+
+Each record holds that day's `periods`, `reviews`, `attestations`, `violations` and `violation_count`. The ID filters match a record when any of its periods names one of the IDs.
+
+---
+
+### Events
+
+```bash
+# Search events, newest first (all filters optional and comma-separated)
+mobileops events search --json
+mobileops events search --job-ids <job_id> --json
+mobileops events search --job-ref-numbers "J-1001,J-1002" --json
+mobileops events search --order-ids <order_id> --json
+mobileops events search --vessel-ids <vessel_id> --types "Depart,Arrive" --json
+mobileops events search --work-type-ids <id> --json
+
+# Filters: --job-ref-numbers (wins over --job-ids), --job-ids, --order-ref-numbers (wins over --order-ids), --order-ids,
+#          --types, --event-type-ids (wins over --work-type-ids), --work-type-ids, --vessel-ids
+```
+
+**API: POST /api/events/search (read-only; events are created and edited in the app)**
+
+The JSON response also carries `wheelhouse_template_event_fields`, the field definitions needed to read each event's values. To fetch a single event, search with a narrow filter such as `--job-ids` and pick it from the results.
+
+---
+
+### Codes
+
+```bash
+# List codes (archived codes are not returned)
+mobileops codes list --json
+
+# Get a specific code
+mobileops codes get <id> --json
+
+# Create a company-wide code, or one scoped to a vessel
+mobileops codes create --name "FUEL" --type "Accounting" --description "Fuel purchases" --json
+mobileops codes create --name "DECK-01" --type "Job" --vessel-id <vessel_id> --json
+
+# Update a code; --company-wide clears the vessel scope
+mobileops codes update <id> --description "Bunker fuel purchases" --json
+mobileops codes update <id> --company-wide --json
+```
+
+**API: GET /api/codes, GET /api/codes/:id, POST /api/codes, PUT /api/codes/:id**
+
+Writable fields: `--name`, `--description`, `--type` (the app offers Accounting, Billing, Job, Other), `--vessel-id`, `--company-wide` (update only, bool). Code IDs are what `--code-id` expects on parts, work requests and deficiencies.
+
+---
+
+### Fuel Level Readings
+
+```bash
+# Tank level readings for a vessel, oldest first
+mobileops fuel-level-readings list --vessel-id <vessel_id> --json
+mobileops fuel-level-readings list --vessel-id <vessel_id> --from 2026-03-01T00:00:00Z --to 2026-03-31T23:59:59Z --json
+mobileops fuel-level-readings list --job-id <job_id> --json
+
+# Filters: --vessel-id, --job-id, --from (ISO 8601), --to (ISO 8601)
+```
+
+**API: GET /api/fuel-level-readings (read-only)**
+
+Each reading carries `reading_at`, `reading_type`, `level`, the fuel type, the measurement unit and the tank `location_*` it was taken at.
+
+---
+
+### Bunker Partitions (Fuel Lifts and Consumption)
+
+```bash
+# Fuel lifts for a vessel with the consumption drawn from each, oldest lift first
+mobileops bunker-partitions list --vessel-id <vessel_id> --json
+mobileops bunker-partitions list --vessel-id <vessel_id> --from 2026-03-01T00:00:00 --to 2026-03-31T23:59:59 --json
+
+# Partitions that fed a particular job
+mobileops bunker-partitions list --job-id <job_id> --json
+
+# Filters: --vessel-id, --job-id, --from, --to (ISO 8601, read in the company's time zone)
+```
+
+**API: GET /api/bunker-partitions (read-only)**
+
+A partition is one fuel lift (`quantity`, `cost`, `vendor_*`, `timestamp`) plus its `consumed` total and a `consumption` array attributing burn to jobs (FIFO across lifts). `active` marks lifts that still hold fuel.
 
 ---
 
@@ -848,7 +967,7 @@ Writable fields: `--name`, `--reference-number`, `--color`, `--measurement-ids` 
 | Resource | Create | Update | Delete |
 |----------|--------|--------|--------|
 | vessels | ✅ | ✅ | — |
-| jobs | ✅ | ✅ | — |
+| jobs | ✅ | ✅ | — (launched jobs are cancelled with `--cancel`) |
 | crew | ✅ | ✅ | ✅ |
 | components | ✅ | ✅ | — |
 | parts | ✅ | ✅ | — |
@@ -861,19 +980,21 @@ Writable fields: `--name`, `--reference-number`, `--color`, `--measurement-ids` 
 | personnel-documents | ✅ | ✅ | ✅ |
 | vessel-specs | ✅ | ✅ | — |
 | customers | ✅ | ✅ | — |
-| suppliers | ✅ | ✅ | — |
-| makes | ✅ | ✅ | — |
-| models | ✅ | ✅ | — |
+| makes | ✅ | — | — |
+| models | ✅ | — | — |
+| terms | ✅ | — | — |
 | divisions | ✅ | ✅ | — |
 | employee-positions | ✅ | ✅ | — |
 | vessel-types | ✅ | ✅ | — |
 | work-types | ✅ | ✅ | — |
 | locations | ✅ | ✅ | — |
-| cargo-types | ✅ | ✅ | — |
-| terms | ✅ | ✅ | — |
+| codes | ✅ | ✅ | — |
+| invoice-statements | — | ✅ (integration-status only) | — |
 | position-reports | ✅ | — | — |
 
-Read-only resources: vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, part-requests, purchase-orders, wheelhouse-logs, invoice-statements
+Read-only resources: suppliers, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, bunker-partitions
+
+Not available through the API at all (manage them in the MobileOps app): vendors, fuel types, fuel removals, event create/edit/delete.
 
 ## Common Workflows
 
@@ -937,6 +1058,38 @@ mobileops jobs get <job_id> --json
 mobileops form-instances list --job-id <job_id> --json
 ```
 
+### Pull a SIRE inspection report
+
+```bash
+# 1. Find the audits (SIRE inspections carry type "SIRE Inspection")
+mobileops audits list --limit 50 --json | jq '.data[] | select(.type == "SIRE Inspection") | {id, name, date, vessel_name, status}'
+
+# 2. All observations across every SIRE inspection, or for one audit
+mobileops observations list --audit-type "SIRE Inspection" --limit 100 --json
+mobileops observations list --audit-id <audit_id> --json
+```
+
+### Reconcile fuel for a vessel
+
+```bash
+# 1. Lifts and the consumption attributed to each job (FIFO)
+mobileops bunker-partitions list --vessel-id <vessel_id> --from 2026-03-01T00:00:00 --to 2026-03-31T23:59:59 --json
+
+# 2. Tank readings over the same window
+mobileops fuel-level-readings list --vessel-id <vessel_id> --from 2026-03-01T00:00:00Z --to 2026-03-31T23:59:59Z --json
+
+# 3. Engine hours and fuel burn summed by component
+mobileops component-logs list --vessel-id <vessel_id> --sum --json
+```
+
+### Check whether a vessel is free before booking
+
+```bash
+mobileops jobs vessel-availability --vessel-id <vessel_id> --from 2026-04-01 --to 2026-04-15 --json
+# empty data = free; otherwise the overlapping jobs are listed
+mobileops jobs create --from 2026-04-01 --to 2026-04-15 --vessels <vessel_id> --customers <customer_id> --json
+```
+
 ### Create a work request from a deficiency
 
 ```bash
@@ -981,7 +1134,9 @@ mobileops vessel-documents create --vessel-id <new_vessel_id> --name "Safety Cer
 
 ```bash
 mobileops version                             # Check CLI version
+mobileops update                              # Self-update the binary and this skill
 mobileops tree                                # Print full command tree
+mobileops --help --agent                      # Machine-readable manifest (commands, flags, API operation per command)
 ```
 
 ## Pagination

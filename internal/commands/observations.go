@@ -96,8 +96,6 @@ func init() {
 	observationsListCmd.Flags().String("audit-type", "", "Filter by parent Audit type, e.g. \"SIRE Inspection\"")
 	observationsListCmd.Flags().String("audit-id", "", "Filter by a specific Audit ID")
 	observationsListCmd.Flags().String("vessel-id", "", "Filter by vessel ID")
-	observationsListCmd.Flags().String("component-id", "", "Filter by component ID")
-	observationsListCmd.Flags().String("part-id", "", "Filter by part ID")
 	observationsListCmd.Flags().String("start-date", "", "Earliest observation date (YYYY-MM-DD)")
 	observationsListCmd.Flags().String("end-date", "", "Latest observation date (YYYY-MM-DD)")
 	observationsListCmd.Flags().String("status", "", "Filter by status (e.g. Resolved)")
@@ -119,14 +117,12 @@ func runObservationsList(cmd *cobra.Command, args []string) error {
 
 	params := paginationParams(cmd)
 	listFilters := map[string]string{
-		"audit-type":   "audit_type",
-		"audit-id":     "audit_id",
-		"vessel-id":    "vessel_id",
-		"component-id": "component_id",
-		"part-id":      "part_id",
-		"start-date":   "start_date",
-		"end-date":     "end_date",
-		"status":       "status",
+		"audit-type": "audit_type",
+		"audit-id":   "audit_id",
+		"vessel-id":  "vessel_id",
+		"start-date": "start_date",
+		"end-date":   "end_date",
+		"status":     "status",
 	}
 	for flag, paramKey := range listFilters {
 		if v, _ := cmd.Flags().GetString(flag); v != "" {

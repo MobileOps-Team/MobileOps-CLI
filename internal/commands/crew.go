@@ -55,29 +55,34 @@ var crewFindByEmployeeNumberCmd = &cobra.Command{
 }
 
 var crewFlags = map[string]string{
-	"first-name":      "first_name",
-	"last-name":       "last_name",
-	"email":           "email",
-	"password":        "password",
-	"phone":           "phone",
-	"time-zone":       "time_zone",
-	"address":         "address",
-	"birthday":        "birthday",
-	"passport-number": "passport_number",
-	"mmc-number":      "mmc_number",
-	"employee-number": "employee_number",
+	"first-name":            "first_name",
+	"last-name":             "last_name",
+	"email":                 "email",
+	"password":              "password",
+	"phone":                 "phone",
+	"time-zone":             "time_zone",
+	"address":               "address",
+	"birthday":              "birthday",
+	"passport-number":       "passport_number",
+	"mmc-number":            "mmc_number",
+	"employee-number":       "employee_number",
+	"password-confirmation": "password_confirmation",
+	"archived-date":         "archived_date",
+	"employee-code":         "employee_code",
 }
 
 var crewBoolFlags = map[string]string{
 	"receive-notifications": "receive_notifications",
 	"login-disabled":        "login_disabled",
 	"archived":              "archived",
+	"exclude-tr":            "exclude_tr",
 }
 
 var crewArrayFlags = map[string]string{
 	"division-ids":       "division_ids",
 	"employee-positions": "employee_positions",
 	"primary-assets":     "primary_assets",
+	"roles":              "roles",
 }
 
 func addCrewWriteFlags(cmd *cobra.Command) {
@@ -98,6 +103,11 @@ func addCrewWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("division-ids", "", "Division IDs (comma-separated)")
 	cmd.Flags().String("employee-positions", "", "Employee positions (comma-separated)")
 	cmd.Flags().String("primary-assets", "", "Primary asset IDs (comma-separated)")
+	cmd.Flags().String("password-confirmation", "", "Password confirmation (required on create, 8-128 chars)")
+	cmd.Flags().String("archived-date", "", "Archived date")
+	cmd.Flags().String("employee-code", "", "Employee code (accepted but not returned)")
+	cmd.Flags().Bool("exclude-tr", false, "Exclude from time reporting")
+	cmd.Flags().String("roles", "", "Role names (comma-separated); replaces roles wholesale, admin roles are stripped")
 }
 
 func init() {

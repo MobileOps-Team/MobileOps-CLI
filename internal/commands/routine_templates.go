@@ -27,6 +27,10 @@ func init() {
 	routineTemplatesListCmd.Flags().String("category", "", "Filter by category")
 	routineTemplatesListCmd.Flags().String("type", "", "Filter by type")
 	routineTemplatesListCmd.Flags().String("frequency-type", "", "Filter by frequency type")
+	routineTemplatesListCmd.Flags().String("id", "", "Return a single template by ID (other filters ignored)")
+	routineTemplatesListCmd.Flags().String("master", "", "Filter by master flag (true/false)")
+	routineTemplatesListCmd.Flags().String("master-id", "", "Templates inheriting from this master template")
+	routineTemplatesListCmd.Flags().String("universal", "", "Filter by universal flag (true/false)")
 
 	routineTemplatesCmd.AddCommand(routineTemplatesListCmd)
 }
@@ -38,6 +42,12 @@ func runRoutineTemplatesList(cmd *cobra.Command, args []string) error {
 	}
 
 	params := paginationParams(cmd)
+	listFilters(cmd, params, map[string]string{
+		"id":        "id",
+		"master":    "master",
+		"master-id": "master_id",
+		"universal": "universal",
+	})
 	if v, _ := cmd.Flags().GetString("vessel-id"); v != "" {
 		params["vessel_id"] = v
 	}

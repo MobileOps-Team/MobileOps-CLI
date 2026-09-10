@@ -17,9 +17,9 @@ case "$OS" in
   linux)  OS="linux" ;;
   darwin) OS="darwin" ;;
   mingw*|msys*|cygwin*)
-    echo "Error: Windows detected. Please use Scoop instead:"
-    echo "  scoop bucket add mobileops https://github.com/MobileOps-Team/homebrew-tap"
-    echo "  scoop install mobileops-cli"
+    echo "Error: Windows detected. Download the zip for your architecture from"
+    echo "  https://github.com/${REPO}/releases/latest"
+    echo "and put mobileops.exe somewhere on your PATH."
     exit 1
     ;;
   *)
