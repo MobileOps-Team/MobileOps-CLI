@@ -11,11 +11,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require a version bump when the CLI changes
+        if: github.event_name == 'pull_request'
+        run: |
+          base=$(git merge-base "origin/${{ github.base_ref }}" HEAD)
+          changed=$(git diff --name-only "$base" HEAD)
+          echo "$changed"
+
+          code_changed=$(echo "$changed" | grep -E '^(cmd/|internal/)' | grep -v '^internal/version/version.go$' || true)
+          if [ -n "$code_changed" ] && ! echo "$changed" | grep -qx 'internal/version/version.go'; then
+            echo "::error::This PR changes the CLI but not internal/version/version.go." \
+                 "Bump Version so that merging to master publishes a release."
+            exit 1
+          fi
+
+          version=$(sed -nE 's/^const Version = "([^"]+)".*/\1/p' internal/version/version.go)
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null 2>&1; then
+            echo "::error::Version $version is already released (tag v$version exists). Bump it."
+            exit 1
+          fi
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
 
       - name: Build
         run: go build ./cmd/mobileops
@@ -31,7 +53,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
 
       - name: Run go vet
         run: go vet ./...

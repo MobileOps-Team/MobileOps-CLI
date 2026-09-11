@@ -33,13 +33,6 @@ var makesCreateCmd = &cobra.Command{
 	RunE:  runMakesCreate,
 }
 
-var makesUpdateCmd = &cobra.Command{
-	Use:   "update ID",
-	Short: "Update a make",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runMakesUpdate,
-}
-
 var makeFlags = map[string]string{
 	"name":           "name",
 	"address":        "address",
@@ -67,12 +60,10 @@ func init() {
 	makesListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
 
 	addMakeWriteFlags(makesCreateCmd)
-	addMakeWriteFlags(makesUpdateCmd)
 
 	makesCmd.AddCommand(makesListCmd)
 	makesCmd.AddCommand(makesGetCmd)
 	makesCmd.AddCommand(makesCreateCmd)
-	makesCmd.AddCommand(makesUpdateCmd)
 }
 
 func runMakesList(cmd *cobra.Command, args []string) error {
@@ -129,27 +120,6 @@ func runMakesCreate(cmd *cobra.Command, args []string) error {
 	makeID := envelope.ExtractID(response)
 	env := envelope.WrapRecord(response, "Make created", []string{
 		fmt.Sprintf("mobileops makes get %s", makeID),
-	})
-	formatter.Output(env, jsonOutput)
-	return nil
-}
-
-func runMakesUpdate(cmd *cobra.Command, args []string) error {
-	id := args[0]
-	c, err := client.New("", "", "", envFlag)
-	if err != nil {
-		return handleClientError(err)
-	}
-
-	body := bodyFromFlags(cmd, makeFlags)
-
-	response, err := c.Put(fmt.Sprintf("makes/%s", id), wrapBody("make", body))
-	if err != nil {
-		return handleClientError(err)
-	}
-
-	env := envelope.WrapRecord(response, "Make updated", []string{
-		fmt.Sprintf("mobileops makes get %s", id),
 	})
 	formatter.Output(env, jsonOutput)
 	return nil

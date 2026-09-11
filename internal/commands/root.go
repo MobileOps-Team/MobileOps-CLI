@@ -22,13 +22,7 @@ var rootCmd = &cobra.Command{
 	Short: "CLI for the MobileOps API",
 	Long:  "CLI for managing vessels, jobs, crew, and operations via the MobileOps API",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// If --agent and --help are both set, print agent manifest and exit
-		if agentMode {
-			agent.Generate()
-			os.Exit(0)
-		}
-
-		if cmd.Name() != "update" {
+		if cmd.Name() != "update" && os.Getenv("MOBILEOPS_SKIP_VERSION_CHECK") == "" {
 			versionCheckCh = updater.CheckVersionBackground(cliVersion)
 		}
 	},
@@ -36,9 +30,20 @@ var rootCmd = &cobra.Command{
 		if versionCheckCh == nil {
 			return
 		}
-		if latest := <-versionCheckCh; latest != "" {
-			fmt.Fprintf(os.Stderr, "\n\u26a0 Update available: v%s \u2192 v%s\n  Run: mobileops update\n", cliVersion, latest)
+		latest := <-versionCheckCh
+		if latest == "" {
+			return
 		}
+
+		if updater.AutoUpdateEnabled() && updater.CanSelfUpdate() {
+			if err := updater.AutoUpdate(latest); err == nil {
+				fmt.Fprintf(os.Stderr, "\n\u2713 mobileops updated to v%s (takes effect on the next command)\n", latest)
+				updateSkillQuiet()
+				return
+			}
+		}
+
+		fmt.Fprintf(os.Stderr, "\n\u26a0 Update available: v%s \u2192 v%s\n  Run: mobileops update\n", cliVersion, latest)
 	},
 }
 
@@ -46,6 +51,15 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&jsonOutput, "json", false, "Output as JSON")
 	rootCmd.PersistentFlags().BoolVar(&agentMode, "agent", false, "Machine-readable help (use with --help)")
 	rootCmd.PersistentFlags().StringVar(&envFlag, "env", "", "Environment: production, gamma, development, test")
+
+	defaultHelp := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		if agentMode {
+			agent.Generate(cmd.Root(), apiCoverage)
+			return
+		}
+		defaultHelp(cmd, args)
+	})
 
 	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(vesselsCmd)
@@ -83,6 +97,12 @@ func init() {
 	rootCmd.AddCommand(purchaseOrdersCmd)
 	rootCmd.AddCommand(wheelhouseLogsCmd)
 	rootCmd.AddCommand(cargoTypesCmd)
+	rootCmd.AddCommand(auditsCmd)
+	rootCmd.AddCommand(eventsCmd)
+	rootCmd.AddCommand(workRestsCmd)
+	rootCmd.AddCommand(codesCmd)
+	rootCmd.AddCommand(fuelLevelReadingsCmd)
+	rootCmd.AddCommand(bunkerPartitionsCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(treeCmd)

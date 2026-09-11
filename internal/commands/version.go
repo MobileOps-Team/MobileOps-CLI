@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/MobileOps-Team/mobileops-cli/internal/version"
 	"github.com/spf13/cobra"
 )
 
-const cliVersion = "0.1.0"
+const cliVersion = version.Version
 
 var versionCmd = &cobra.Command{
 	Use:   "version",

@@ -32,6 +32,8 @@ func init() {
 	routineCalculationsListCmd.Flags().String("due-date-gte", "", "Due date after (YYYY-MM-DD)")
 	routineCalculationsListCmd.Flags().String("routine-template-id", "", "Filter by routine template ID")
 	routineCalculationsListCmd.Flags().String("master-template-id", "", "Filter by master template ID")
+	routineCalculationsListCmd.Flags().String("component-risk-score", "", "Component risk score >= this (1-10)")
+	routineCalculationsListCmd.Flags().String("part-risk-score", "", "Part risk score >= this (1-10)")
 
 	routineCalculationsCmd.AddCommand(routineCalculationsListCmd)
 }
@@ -44,17 +46,19 @@ func runRoutineCalculationsList(cmd *cobra.Command, args []string) error {
 
 	params := paginationParams(cmd)
 	flagMap := map[string]string{
-		"vessel-id":           "vessel_id",
-		"component-id":        "component_id",
-		"part-id":             "part_id",
-		"division-id":         "division_id",
-		"frequency-type":      "frequency_type",
-		"value-lte":           "value_lte",
-		"value-gte":           "value_gte",
-		"due-date-lte":        "due_date_lte",
-		"due-date-gte":        "due_date_gte",
-		"routine-template-id": "routine_template_id",
-		"master-template-id":  "master_template_id",
+		"vessel-id":            "vessel_id",
+		"component-id":         "component_id",
+		"part-id":              "part_id",
+		"division-id":          "division_id",
+		"frequency-type":       "frequency_type",
+		"value-lte":            "value_lte",
+		"value-gte":            "value_gte",
+		"due-date-lte":         "due_date_lte",
+		"due-date-gte":         "due_date_gte",
+		"routine-template-id":  "routine_template_id",
+		"master-template-id":   "master_template_id",
+		"component-risk-score": "component_risk_score",
+		"part-risk-score":      "part_risk_score",
 	}
 	for flag, param := range flagMap {
 		if v, _ := cmd.Flags().GetString(flag); v != "" {

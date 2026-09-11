@@ -43,15 +43,13 @@ var nonconformitiesUpdateCmd = &cobra.Command{
 var nonconformityFlags = map[string]string{
 	"user-id":               "user_id",
 	"date":                  "date",
+	"created-at":            "created_at",
 	"vessel-id":             "vessel_id",
 	"plan-of-action":        "plan_of_action",
 	"description":           "description",
 	"status":                "status",
-	"priority":              "priority",
 	"notification-group-id": "notification_group_id",
-	"root-cause":            "root_cause",
 	"corrective-actions":    "corrective_actions",
-	"location":              "location",
 	"manager-notes":         "manager_notes",
 	"resolution-date":       "resolution_date",
 }
@@ -72,15 +70,13 @@ var nonconformityArrayFlags = map[string]string{
 func addNonconformityWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("user-id", "", "User ID")
 	cmd.Flags().String("date", "", "Date")
+	cmd.Flags().String("created-at", "", "Creation timestamp (ISO 8601); backdates the record")
 	cmd.Flags().String("vessel-id", "", "Vessel ID")
 	cmd.Flags().String("plan-of-action", "", "Plan of action")
 	cmd.Flags().String("description", "", "Description")
 	cmd.Flags().String("status", "", "Status")
-	cmd.Flags().String("priority", "", "Priority")
 	cmd.Flags().String("notification-group-id", "", "Notification group ID")
-	cmd.Flags().String("root-cause", "", "Root cause")
 	cmd.Flags().String("corrective-actions", "", "Corrective actions")
-	cmd.Flags().String("location", "", "Location")
 	cmd.Flags().String("manager-notes", "", "Manager notes")
 	cmd.Flags().String("resolution-date", "", "Resolution date")
 	cmd.Flags().Bool("major", false, "Major nonconformity")
@@ -96,8 +92,6 @@ func init() {
 	nonconformitiesListCmd.Flags().Int("page", 1, "Page number")
 	nonconformitiesListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
 	nonconformitiesListCmd.Flags().String("vessel-id", "", "Filter by vessel ID")
-	nonconformitiesListCmd.Flags().String("component-id", "", "Filter by component ID")
-	nonconformitiesListCmd.Flags().String("part-id", "", "Filter by part ID")
 
 	addNonconformityWriteFlags(nonconformitiesCreateCmd)
 	addNonconformityWriteFlags(nonconformitiesUpdateCmd)
@@ -117,12 +111,6 @@ func runNonconformitiesList(cmd *cobra.Command, args []string) error {
 	params := paginationParams(cmd)
 	if v, _ := cmd.Flags().GetString("vessel-id"); v != "" {
 		params["vessel_id"] = v
-	}
-	if v, _ := cmd.Flags().GetString("component-id"); v != "" {
-		params["component_id"] = v
-	}
-	if v, _ := cmd.Flags().GetString("part-id"); v != "" {
-		params["part_id"] = v
 	}
 
 	response, err := c.Get("nonconformities", params)

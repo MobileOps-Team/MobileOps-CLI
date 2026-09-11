@@ -41,21 +41,22 @@ var workRequestsUpdateCmd = &cobra.Command{
 }
 
 var workRequestFlags = map[string]string{
-	"user-id":                "user_id",
-	"date":                   "date",
-	"resolution-date":        "resolution_date",
-	"vessel-id":              "vessel_id",
-	"component-id":           "component_id",
-	"part-id":                "part_id",
-	"description":            "description",
-	"status":                 "status",
-	"plan-of-action":         "plan_of_action",
-	"priority":               "priority",
-	"notification-group-id":  "notification_group_id",
-	"location":               "location",
-	"manager-notes":          "manager_notes",
-	"code-id":                "code_id",
-	"reference-number":       "reference_number",
+	"user-id":               "user_id",
+	"date":                  "date",
+	"created-at":            "created_at",
+	"resolution-date":       "resolution_date",
+	"vessel-id":             "vessel_id",
+	"component-id":          "component_id",
+	"part-id":               "part_id",
+	"description":           "description",
+	"status":                "status",
+	"plan-of-action":        "plan_of_action",
+	"priority":              "priority",
+	"notification-group-id": "notification_group_id",
+	"location":              "location",
+	"manager-notes":         "manager_notes",
+	"code-id":               "code_id",
+	"reference-number":      "reference_number",
 }
 
 var workRequestBoolFlags = map[string]string{
@@ -71,6 +72,7 @@ var workRequestArrayFlags = map[string]string{
 func addWorkRequestWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("user-id", "", "User ID")
 	cmd.Flags().String("date", "", "Date")
+	cmd.Flags().String("created-at", "", "Creation timestamp (ISO 8601); backdates the record")
 	cmd.Flags().String("resolution-date", "", "Resolution date")
 	cmd.Flags().String("vessel-id", "", "Vessel ID")
 	cmd.Flags().String("component-id", "", "Component ID")
@@ -94,6 +96,8 @@ func init() {
 	workRequestsListCmd.Flags().Int("page", 1, "Page number")
 	workRequestsListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
 	workRequestsListCmd.Flags().String("vessel-id", "", "Filter by vessel ID")
+	workRequestsListCmd.Flags().String("component-id", "", "Filter by component ID")
+	workRequestsListCmd.Flags().String("part-id", "", "Filter by part ID")
 
 	addWorkRequestWriteFlags(workRequestsCreateCmd)
 	addWorkRequestWriteFlags(workRequestsUpdateCmd)
@@ -114,6 +118,7 @@ func runWorkRequestsList(cmd *cobra.Command, args []string) error {
 	if vesselID, _ := cmd.Flags().GetString("vessel-id"); vesselID != "" {
 		params["vessel_id"] = vesselID
 	}
+	listFilters(cmd, params, map[string]string{"component-id": "component_id", "part-id": "part_id"})
 
 	response, err := c.Get("work-requests", params)
 	if err != nil {

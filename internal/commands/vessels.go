@@ -40,36 +40,34 @@ var vesselsUpdateCmd = &cobra.Command{
 	RunE:  runVesselsUpdate,
 }
 
-var vesselsSpecsCmd = &cobra.Command{
-	Use:   "specs VESSEL_ID",
-	Short: "List specs for a vessel",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runVesselsSpecs,
-}
-
 var vesselFlags = map[string]string{
-	"name":          "name",
-	"division-id":   "division_id",
-	"status":        "status",
-	"category":      "category",
-	"vessel-type-id": "vessel_type_id",
-	"customer-id":   "customer_id",
-	"customer-name": "customer_name",
-	"imo-number":    "imo_number",
-	"uscg-number":   "uscg_number",
-	"mmsi-number":   "mmsi_number",
-	"call-sign":     "call_sign",
-	"color":         "color",
-	"length":        "length",
-	"height":        "height",
-	"width":         "width",
-	"dimension-unit": "dimension_unit",
+	"name":                   "name",
+	"division-id":            "division_id",
+	"status":                 "status",
+	"category":               "category",
+	"vessel-type-id":         "vessel_type_id",
+	"customer-id":            "customer_id",
+	"customer-name":          "customer_name",
+	"imo-number":             "imo_number",
+	"uscg-number":            "uscg_number",
+	"mmsi-number":            "mmsi_number",
+	"call-sign":              "call_sign",
+	"color":                  "color",
+	"length":                 "length",
+	"height":                 "height",
+	"width":                  "width",
+	"dimension-unit":         "dimension_unit",
+	"vessel-type-subtype-id": "vessel_type_subtype_id",
+	"activation-date":        "activation_date",
+	"specifications":         "specifications",
 }
 
 var vesselBoolFlags = map[string]string{
-	"active":         "active",
-	"voyage-enabled": "voyage_enabled",
-	"external":       "external",
+	"active":              "active",
+	"voyage-enabled":      "voyage_enabled",
+	"external":            "external",
+	"notify-sync":         "notify_sync",
+	"tow-diagram-enabled": "tow_diagram_enabled",
 }
 
 func addVesselWriteFlags(cmd *cobra.Command) {
@@ -92,12 +90,18 @@ func addVesselWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("active", false, "Active")
 	cmd.Flags().Bool("voyage-enabled", false, "Voyage enabled")
 	cmd.Flags().Bool("external", false, "External vessel")
+	cmd.Flags().String("vessel-type-subtype-id", "", "Vessel type subtype ID (must belong to the vessel type)")
+	cmd.Flags().String("activation-date", "", "Activation date (YYYY-MM-DD)")
+	cmd.Flags().String("specifications", "", "Free-text specifications")
+	cmd.Flags().Bool("notify-sync", false, "Enable sync notifications")
+	cmd.Flags().Bool("tow-diagram-enabled", false, "Enable tow diagram")
 }
 
 func init() {
 	vesselsListCmd.Flags().Int("page", 1, "Page number")
 	vesselsListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
 	vesselsListCmd.Flags().String("division-id", "", "Filter by division ID")
+	vesselsGetCmd.Flags().Bool("by-code", false, "Look the vessel up by its code instead of its numeric ID")
 
 	addVesselWriteFlags(vesselsCreateCmd)
 	addVesselWriteFlags(vesselsUpdateCmd)
@@ -106,7 +110,6 @@ func init() {
 	vesselsCmd.AddCommand(vesselsGetCmd)
 	vesselsCmd.AddCommand(vesselsCreateCmd)
 	vesselsCmd.AddCommand(vesselsUpdateCmd)
-	vesselsCmd.AddCommand(vesselsSpecsCmd)
 }
 
 func runVesselsList(cmd *cobra.Command, args []string) error {
@@ -116,6 +119,7 @@ func runVesselsList(cmd *cobra.Command, args []string) error {
 	}
 
 	params := paginationParams(cmd)
+	listFilters(cmd, params, map[string]string{"division-id": "division_id"})
 	response, err := c.Get("assets", params)
 	if err != nil {
 		return handleClientError(err)
@@ -134,14 +138,18 @@ func runVesselsGet(cmd *cobra.Command, args []string) error {
 		return handleClientError(err)
 	}
 
-	response, err := c.Get(fmt.Sprintf("assets/%s", id), nil)
+	var params map[string]string
+	if byCode, _ := cmd.Flags().GetBool("by-code"); byCode {
+		params = map[string]string{"by_code": "true"}
+	}
+	response, err := c.Get(fmt.Sprintf("assets/%s", id), params)
 	if err != nil {
 		return handleClientError(err)
 	}
 
 	vesselID := envelope.ExtractID(response)
 	env := envelope.WrapRecord(response, "Vessel", []string{
-		fmt.Sprintf("mobileops vessels specs %s", vesselID),
+		fmt.Sprintf("mobileops vessel-specs list --json | jq '.data[] | select(.vessel_id == %s)'", vesselID),
 		fmt.Sprintf("mobileops components list --vessel-id %s", vesselID),
 		fmt.Sprintf("mobileops jobs list --vessel-id %s", vesselID),
 		fmt.Sprintf("mobileops work-requests list --vessel-id %s", vesselID),
@@ -189,26 +197,6 @@ func runVesselsUpdate(cmd *cobra.Command, args []string) error {
 
 	env := envelope.WrapRecord(response, "Vessel updated", []string{
 		fmt.Sprintf("mobileops vessels get %s", id),
-	})
-	formatter.Output(env, jsonOutput)
-	return nil
-}
-
-func runVesselsSpecs(cmd *cobra.Command, args []string) error {
-	vesselID := args[0]
-	c, err := client.New("", "", "", envFlag)
-	if err != nil {
-		return handleClientError(err)
-	}
-
-	response, err := c.Get("vessel-specs", map[string]string{"vessel_id": vesselID})
-	if err != nil {
-		return handleClientError(err)
-	}
-
-	env := envelope.WrapCollection(response, "vessel specs", []string{
-		fmt.Sprintf("mobileops vessels get %s", vesselID),
-		fmt.Sprintf("mobileops components list --vessel-id %s", vesselID),
 	})
 	formatter.Output(env, jsonOutput)
 	return nil

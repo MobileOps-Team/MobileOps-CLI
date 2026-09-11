@@ -32,10 +32,13 @@ var positionReportFlags = map[string]string{
 }
 
 func addPositionReportWriteFlags(cmd *cobra.Command) {
-	cmd.Flags().String("asset-id", "", "Asset/Vessel ID")
-	cmd.Flags().String("latitude", "", "Latitude")
-	cmd.Flags().String("longitude", "", "Longitude")
+	cmd.Flags().String("asset-id", "", "Asset/Vessel ID (required)")
+	cmd.Flags().String("latitude", "", "Latitude, -90 to 90 (required)")
+	cmd.Flags().String("longitude", "", "Longitude, -180 to 180 (required)")
 	cmd.Flags().String("heading", "", "Heading")
+	cmd.MarkFlagRequired("asset-id")
+	cmd.MarkFlagRequired("latitude")
+	cmd.MarkFlagRequired("longitude")
 }
 
 func init() {
@@ -82,9 +85,10 @@ func runPositionReportsCreate(cmd *cobra.Command, args []string) error {
 		return handleClientError(err)
 	}
 
+	// Fields are sent at the top level, not inside a wrapper.
 	body := bodyFromFlags(cmd, positionReportFlags)
 
-	response, err := c.Post("position-reports", wrapBody("position_report", body))
+	response, err := c.Post("position-reports", body)
 	if err != nil {
 		return handleClientError(err)
 	}

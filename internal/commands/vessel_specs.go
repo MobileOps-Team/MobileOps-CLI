@@ -41,21 +41,23 @@ var vesselSpecsUpdateCmd = &cobra.Command{
 }
 
 var vesselSpecFlags = map[string]string{
-	"name":        "name",
 	"vessel-id":   "vessel_id",
 	"template-id": "template_id",
 }
 
+var vesselSpecJSONFlags = map[string]string{
+	"spec-fields": "spec_fields",
+}
+
 func addVesselSpecWriteFlags(cmd *cobra.Command) {
-	cmd.Flags().String("name", "", "Spec name")
-	cmd.Flags().String("vessel-id", "", "Vessel ID")
-	cmd.Flags().String("template-id", "", "Template ID")
+	cmd.Flags().String("vessel-id", "", "Vessel ID (one spec per vessel)")
+	cmd.Flags().String("template-id", "", "Vessel spec template ID (required; filters spec-fields)")
+	cmd.Flags().String("spec-fields", "", "Spec values as a JSON object keyed by template field, e.g. '{\"length\":\"120 ft\"}'")
 }
 
 func init() {
 	vesselSpecsListCmd.Flags().Int("page", 1, "Page number")
 	vesselSpecsListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
-	vesselSpecsListCmd.Flags().String("vessel-id", "", "Filter by vessel ID")
 
 	addVesselSpecWriteFlags(vesselSpecsCreateCmd)
 	addVesselSpecWriteFlags(vesselSpecsUpdateCmd)
@@ -72,12 +74,7 @@ func runVesselSpecsList(cmd *cobra.Command, args []string) error {
 		return handleClientError(err)
 	}
 
-	params := paginationParams(cmd)
-	if v, _ := cmd.Flags().GetString("vessel-id"); v != "" {
-		params["vessel_id"] = v
-	}
-
-	response, err := c.Get("vessel-specs", params)
+	response, err := c.Get("vessel-specs", paginationParams(cmd))
 	if err != nil {
 		return handleClientError(err)
 	}
@@ -118,6 +115,9 @@ func runVesselSpecsCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	body := bodyFromFlags(cmd, vesselSpecFlags)
+	if err := bodyFromJSONFlags(cmd, body, vesselSpecJSONFlags); err != nil {
+		return err
+	}
 
 	response, err := c.Post("vessel-specs", wrapBody("vessel_spec", body))
 	if err != nil {
@@ -140,6 +140,9 @@ func runVesselSpecsUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	body := bodyFromFlags(cmd, vesselSpecFlags)
+	if err := bodyFromJSONFlags(cmd, body, vesselSpecJSONFlags); err != nil {
+		return err
+	}
 
 	response, err := c.Put(fmt.Sprintf("vessel-specs/%s", id), wrapBody("vessel_spec", body))
 	if err != nil {

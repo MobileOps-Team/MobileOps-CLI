@@ -56,8 +56,13 @@ var customerBoolFlags = map[string]string{
 	"third-party": "third_party",
 }
 
-var customerArrayFlags = map[string]string{
+var customerCreateVesselFlags = map[string]string{
 	"add-vessels": "add_vessels",
+}
+
+var customerUpdateVesselFlags = map[string]string{
+	"add-vessels":    "add_vessel",
+	"remove-vessels": "remove_vessel",
 }
 
 func addCustomerWriteFlags(cmd *cobra.Command) {
@@ -71,7 +76,7 @@ func addCustomerWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("phone", "", "Phone")
 	cmd.Flags().String("hex-color", "", "Hex color")
 	cmd.Flags().Bool("third-party", false, "Third party")
-	cmd.Flags().String("add-vessels", "", "Vessel IDs to add (comma-separated)")
+	cmd.Flags().String("add-vessels", "", "Names of customer-owned vessels to add (comma-separated)")
 }
 
 func init() {
@@ -80,6 +85,7 @@ func init() {
 
 	addCustomerWriteFlags(customersCreateCmd)
 	addCustomerWriteFlags(customersUpdateCmd)
+	customersUpdateCmd.Flags().String("remove-vessels", "", "Keys of customer-owned vessels to remove (comma-separated, from the customer's vessels map)")
 
 	customersCmd.AddCommand(customersListCmd)
 	customersCmd.AddCommand(customersGetCmd)
@@ -133,9 +139,12 @@ func runCustomersCreate(cmd *cobra.Command, args []string) error {
 
 	body := bodyFromFlags(cmd, customerFlags)
 	bodyFromBoolFlags(cmd, body, customerBoolFlags)
-	bodyFromArrayFlags(cmd, body, customerArrayFlags)
 
-	response, err := c.Post("customers", wrapBody("customer", body))
+	payload := wrapBody("customer", body)
+	payload["add_vessels"] = []string{}
+	bodyFromArrayFlags(cmd, payload, customerCreateVesselFlags)
+
+	response, err := c.Post("customers", payload)
 	if err != nil {
 		return handleClientError(err)
 	}
@@ -157,9 +166,14 @@ func runCustomersUpdate(cmd *cobra.Command, args []string) error {
 
 	body := bodyFromFlags(cmd, customerFlags)
 	bodyFromBoolFlags(cmd, body, customerBoolFlags)
-	bodyFromArrayFlags(cmd, body, customerArrayFlags)
 
-	response, err := c.Put(fmt.Sprintf("customers/%s", id), wrapBody("customer", body))
+	payload := wrapBody("customer", body)
+	if len(payload) == 0 {
+		payload = map[string]interface{}{}
+	}
+	bodyFromArrayFlags(cmd, payload, customerUpdateVesselFlags)
+
+	response, err := c.Put(fmt.Sprintf("customers/%s", id), payload)
 	if err != nil {
 		return handleClientError(err)
 	}
