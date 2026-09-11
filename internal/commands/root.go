@@ -22,7 +22,7 @@ var rootCmd = &cobra.Command{
 	Short: "CLI for the MobileOps API",
 	Long:  "CLI for managing vessels, jobs, crew, and operations via the MobileOps API",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if cmd.Name() != "update" {
+		if cmd.Name() != "update" && os.Getenv("MOBILEOPS_SKIP_VERSION_CHECK") == "" {
 			versionCheckCh = updater.CheckVersionBackground(cliVersion)
 		}
 	},

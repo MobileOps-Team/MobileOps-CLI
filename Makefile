@@ -17,7 +17,7 @@ api-check:
 		echo "Downloading $(SPEC_URL) -> $(SPEC_FILE)"; \
 		curl -fsSL "$(SPEC_URL)" -o "$(SPEC_FILE)"; \
 	fi
-	MOBILEOPS_OPENAPI_SPEC="$(SPEC_FILE)" go test ./internal/commands -run TestAPICoverage -v
+	MOBILEOPS_OPENAPI_SPEC="$(SPEC_FILE)" go test ./internal/commands -run 'TestAPI' -v
 
 clean:
 	rm -rf bin/

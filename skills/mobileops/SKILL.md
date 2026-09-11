@@ -113,9 +113,6 @@ mobileops vessels create --name "MV Atlantic" --division-id <id> --vessel-type-i
 # Update a vessel
 mobileops vessels update <id> --name "MV Atlantic II" --status "active" --json
 
-# List specs for a vessel
-mobileops vessels specs <vessel_id> --json
-
 # Filters: --division-id
 ```
 
@@ -159,7 +156,7 @@ mobileops jobs export --from 2026-04-01 --to 2026-04-30 --dispatch-segment-templ
 
 `--status` takes one or more of `NOT_READY`, `READY`, `LAUNCHED`, `IN_PROGRESS`, `COMPLETE`, `JOB_CANCELED`, `JOB_RESCHEDULED` (comma-separated). `--active-only` is the shorthand for everything except NOT_READY, JOB_CANCELED and JOB_RESCHEDULED. Deleting a launched job is not possible; set `--cancel` instead.
 
-Writable fields: `--from` (date_beginning), `--to` (date_ending), `--notes`, `--user-id`, `--division-id`, `--po-number`, `--ref-number`, `--tbd` (bool), `--cancel` (bool), `--vessels` (comma-separated), `--customers` (comma-separated), `--work-types` (comma-separated), `--locations` (comma-separated)
+Writable fields: `--from` (date_beginning), `--to` (date_ending), `--notes`, `--user-id`, `--division-id`, `--po-number`, `--ref-number`, `--tbd` (bool), `--cancel` (bool), `--vessels` (comma-separated), `--customers` (comma-separated), `--work-types` (comma-separated), `--locations` (comma-separated), `--customer-vessels` (JSON array of `{"customer_id","vessel_key"}`; keys come from the customer's `vessels` map), `--booking-requests` (JSON array of OpenTug booking requests, stored verbatim)
 
 ---
 
@@ -189,7 +186,7 @@ mobileops crew delete <id> --json
 
 **API: GET /api/users, GET /api/users/:id, GET /api/users/by_employee_number, POST /api/users, PUT /api/users/:id, DELETE /api/users/:id**
 
-Writable fields: `--first-name`, `--last-name`, `--email`, `--password`, `--password-confirmation` (required on create, 8-128 chars), `--phone`, `--time-zone`, `--address`, `--birthday`, `--passport-number`, `--mmc-number`, `--employee-number`, `--employee-code`, `--archived-date`, `--receive-notifications` (bool), `--login-disabled` (bool), `--archived` (bool), `--exclude-tr` (bool), `--division-ids` (comma-separated), `--employee-positions` (comma-separated), `--primary-assets` (comma-separated), `--roles` (comma-separated; replaces roles wholesale, admin roles are stripped)
+Writable fields: `--first-name`, `--last-name`, `--email`, `--password`, `--password-confirmation` (required on create, 8-128 chars), `--phone`, `--time-zone`, `--address`, `--birthday`, `--passport-number`, `--mmc-number`, `--employee-number`, `--employee-code`, `--archived-date`, `--receive-notifications` (bool), `--login-disabled` (bool), `--archived` (bool), `--exclude-tr` (bool), `--division-ids` (comma-separated), `--employee-positions` (comma-separated), `--primary-assets` (comma-separated), `--roles` (comma-separated; replaces roles wholesale, admin roles are stripped), `--pay-rates` (JSON array of `{"position_id","rate"}`, rate in cents per hour)
 
 ---
 
@@ -213,7 +210,7 @@ mobileops components update <id> --hours "1500" --critical --json
 
 **API: GET /api/components, GET /api/components/:id, POST /api/components, PUT /api/components/:id**
 
-Writable fields: `--name`, `--vessel-id`, `--model-id`, `--model-number`, `--ultra-field-template-id`, `--hours`, `--lifetime-hours`, `--has-hours` (bool), `--critical` (bool), `--reset-hours` (bool)
+Writable fields: `--name`, `--vessel-id`, `--model-id`, `--model-number`, `--ultra-field-template-id`, `--hours`, `--lifetime-hours`, `--specifications`, `--has-hours` (bool), `--critical` (bool), `--reset-hours` (bool)
 
 ---
 
@@ -237,7 +234,7 @@ mobileops parts update <id> --hours "500" --critical --json
 
 **API: GET /api/parts, GET /api/parts/:id, POST /api/parts, PUT /api/parts/:id**
 
-Writable fields: `--name`, `--vessel-id`, `--component-id`, `--model-id`, `--model-number`, `--code-id`, `--ultra-field-template-id`, `--hours`, `--lifetime-hours`, `--has-hours` (bool), `--critical` (bool), `--reset-hours` (bool)
+Writable fields: `--name`, `--vessel-id`, `--component-id`, `--model-id`, `--model-number`, `--code-id`, `--ultra-field-template-id`, `--hours`, `--specifications`, `--has-hours` (bool), `--critical` (bool)
 
 ---
 
@@ -262,7 +259,7 @@ mobileops work-requests update <id> --status "resolved" --resolution-date "2026-
 
 **API: GET /api/work-requests, GET /api/work-requests/:id, POST /api/work-requests, PUT /api/work-requests/:id**
 
-Writable fields: `--user-id`, `--date`, `--resolution-date`, `--vessel-id`, `--component-id`, `--part-id`, `--description`, `--status`, `--plan-of-action`, `--priority`, `--notification-group-id`, `--location`, `--manager-notes`, `--code-id`, `--reference-number`, `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
+Writable fields: `--user-id`, `--date`, `--created-at` (backdate), `--resolution-date`, `--vessel-id`, `--component-id`, `--part-id`, `--description`, `--status`, `--plan-of-action`, `--priority`, `--notification-group-id`, `--location`, `--manager-notes`, `--code-id`, `--reference-number`, `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
 
 ---
 
@@ -286,7 +283,7 @@ mobileops deficiencies update <id> --status "resolved" --corrective-actions "Rep
 
 **API: GET /api/deficiencies, GET /api/deficiencies/:id, POST /api/deficiencies, PUT /api/deficiencies/:id**
 
-Writable fields: `--user-id`, `--date`, `--resolution-date`, `--vessel-id`, `--component-id`, `--part-id`, `--description`, `--status`, `--priority`, `--notification-group-id`, `--root-cause`, `--corrective-actions`, `--location`, `--manager-notes`, `--code-id`, `--reference-number`, `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
+Writable fields: `--user-id`, `--date`, `--created-at` (backdate), `--resolution-date`, `--vessel-id`, `--component-id`, `--part-id`, `--description`, `--status`, `--priority`, `--notification-group-id`, `--root-cause`, `--corrective-actions`, `--location`, `--code-id`, `--reference-number`, `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
 
 ---
 
@@ -310,7 +307,7 @@ mobileops nonconformities update <id> --status "resolved" --corrective-actions "
 
 **API: GET /api/nonconformities, GET /api/nonconformities/:id, POST /api/nonconformities, PUT /api/nonconformities/:id**
 
-Writable fields: `--user-id`, `--date`, `--vessel-id`, `--plan-of-action`, `--description`, `--status`, `--priority`, `--notification-group-id`, `--root-cause`, `--corrective-actions`, `--location`, `--manager-notes`, `--resolution-date`, `--major` (bool), `--external` (bool), `--shoreside` (bool), `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
+Writable fields: `--user-id`, `--date`, `--created-at` (backdate), `--vessel-id`, `--plan-of-action`, `--description`, `--status`, `--notification-group-id`, `--corrective-actions`, `--manager-notes`, `--resolution-date`, `--major` (bool), `--external` (bool), `--shoreside` (bool), `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
 
 ---
 
@@ -344,7 +341,7 @@ Each observation in the response includes an embedded `audit` object (id, type, 
 
 `--audit-type` accepts the literal Audit type — built-in values: `SIRE Inspection`, `External Audit`, `External Survey`, `External Dry Dock Survey`, `Internal Audit`, `Internal Survey`, `Internal Dry Dock Survey`, `Internal Inspection` — or any per-company custom category name. Match is exact and case-sensitive.
 
-Writable fields: `--user-id`, `--date`, `--vessel-id`, `--description`, `--corrective-actions`, `--plan-of-action`, `--status`, `--notification-group-id`, `--resolution-date`, `--manager-notes`, `--reference-number`, `--assigned-to-id`, `--assigned-to`, `--audit-id`, `--routine-id`, `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
+Writable fields: `--user-id`, `--date`, `--created-at` (backdate), `--vessel-id`, `--description`, `--corrective-actions`, `--plan-of-action`, `--status`, `--notification-group-id`, `--resolution-date`, `--manager-notes`, `--reference-number`, `--assigned-to-id`, `--assigned-to`, `--audit-id`, `--routine-id`, `--self-resolve` (bool), `--modify-resolvers` (bool), `--tags` (comma-separated), `--resolvers` (comma-separated)
 
 ---
 
@@ -368,7 +365,7 @@ mobileops maintenance-reports update <id> --description "Oil change completed" -
 
 **API: GET /api/maintenance-reports, GET /api/maintenance-reports/:id, POST /api/maintenance-reports, PUT /api/maintenance-reports/:id**
 
-Writable fields: `--description`, `--date`, `--vessel-id`, `--component-id`, `--component-hours`, `--part-id`, `--user-id`, `--users` (comma-separated)
+Writable fields: `--description`, `--date`, `--created-at` (backdate), `--vessel-id`, `--component-id`, `--component-hours`, `--part-id`, `--user-id`, `--users` (comma-separated)
 
 ---
 
@@ -435,8 +432,8 @@ Writable fields: `--user-id`, `--template-id`, `--issue-date`, `--expire-date`, 
 ### Vessel Specs
 
 ```bash
-# List vessel specs
-mobileops vessel-specs list --vessel-id <vessel_id> --json
+# List vessel specs (no server-side filter; one spec per vessel, pick it by vessel_id)
+mobileops vessel-specs list --limit 100 --json | jq '.data[] | select(.vessel_id == <vessel_id>)'
 
 # Get a specific vessel spec
 mobileops vessel-specs get <id> --json
@@ -446,8 +443,6 @@ mobileops vessel-specs create --vessel-id <id> --template-id <id> --spec-fields 
 
 # Update a vessel spec
 mobileops vessel-specs update <id> --template-id <id> --spec-fields '{"engine":"CAT C32 ACERT"}' --json
-
-# Filters: --vessel-id
 ```
 
 **API: GET /api/vessel-specs, GET /api/vessel-specs/:id, POST /api/vessel-specs, PUT /api/vessel-specs/:id**
@@ -583,12 +578,12 @@ mobileops employee-positions get <id> --json
 mobileops employee-positions create --name "Chief Engineer" --json
 
 # Update an employee position
-mobileops employee-positions update <id> --description "Senior engineering role" --active --json
+mobileops employee-positions update <id> --description "Senior engineering role" --json
 ```
 
 **API: GET /api/employee-positions, GET /api/employee-positions/:id, POST /api/employee-positions, PUT /api/employee-positions/:id**
 
-Writable fields: `--name`, `--description`, `--reference-number`, `--hex-color`, `--active` (bool)
+Writable fields: `--name`, `--description`, `--reference-number`, `--hex-color`
 
 ---
 

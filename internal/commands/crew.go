@@ -78,6 +78,10 @@ var crewBoolFlags = map[string]string{
 	"exclude-tr":            "exclude_tr",
 }
 
+var crewJSONFlags = map[string]string{
+	"pay-rates": "pay_rates",
+}
+
 var crewArrayFlags = map[string]string{
 	"division-ids":       "division_ids",
 	"employee-positions": "employee_positions",
@@ -108,6 +112,7 @@ func addCrewWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("employee-code", "", "Employee code (accepted but not returned)")
 	cmd.Flags().Bool("exclude-tr", false, "Exclude from time reporting")
 	cmd.Flags().String("roles", "", "Role names (comma-separated); replaces roles wholesale, admin roles are stripped")
+	cmd.Flags().String("pay-rates", "", "Pay rates as JSON, e.g. '[{\"position_id\":\"...\",\"rate\":10000}]' (rate in cents per hour)")
 }
 
 func init() {
@@ -177,6 +182,9 @@ func runCrewCreate(cmd *cobra.Command, args []string) error {
 	body := bodyFromFlags(cmd, crewFlags)
 	bodyFromBoolFlags(cmd, body, crewBoolFlags)
 	bodyFromArrayFlags(cmd, body, crewArrayFlags)
+	if err := bodyFromJSONFlags(cmd, body, crewJSONFlags); err != nil {
+		return err
+	}
 
 	response, err := c.Post("users", wrapBody("user", body))
 	if err != nil {
@@ -201,6 +209,9 @@ func runCrewUpdate(cmd *cobra.Command, args []string) error {
 	body := bodyFromFlags(cmd, crewFlags)
 	bodyFromBoolFlags(cmd, body, crewBoolFlags)
 	bodyFromArrayFlags(cmd, body, crewArrayFlags)
+	if err := bodyFromJSONFlags(cmd, body, crewJSONFlags); err != nil {
+		return err
+	}
 
 	response, err := c.Put(fmt.Sprintf("users/%s", id), wrapBody("user", body))
 	if err != nil {

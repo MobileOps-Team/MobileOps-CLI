@@ -7,10 +7,14 @@ https://www.mobileops.at/openapi.yaml.
 ## Keeping the CLI in sync with the REST API
 
 1. `make api-check` (or `make api-check SPEC_FILE=../MobileOps-Web/public/openapi.yaml`
-   for an unmerged branch). It downloads the spec and runs `TestAPICoverage`,
-   which lists every spec operation without a command, every command that
-   calls an operation the spec no longer has, and every command that calls an
-   operation whose description starts with "Not currently available".
+   for an unmerged branch). It downloads the spec and runs two tests:
+   - `TestAPICoverage` (operations): every spec operation without a command,
+     every command calling an operation the spec no longer has, and every
+     command calling an operation marked "Not currently available".
+   - `TestAPIFieldCoverage` (fields): runs every command against a fake API
+     with all flags set and diffs the query params and body fields it sends
+     against the spec, in both directions. A contract field you deliberately
+     don't expose goes in `apiFieldIgnored` with a reason.
 2. For each reported gap:
    - New resource: add `internal/commands/<resource>.go` (copy the closest
      existing file: `wheelhouse_logs.go` for list-only, `codes.go` for CRUD),

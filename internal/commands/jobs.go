@@ -68,6 +68,11 @@ var jobBoolFlags = map[string]string{
 	"cancel": "cancel",
 }
 
+var jobJSONFlags = map[string]string{
+	"customer-vessels": "customer_vessels",
+	"booking-requests": "booking_requests",
+}
+
 var jobArrayFlags = map[string]string{
 	"vessels":    "vessels",
 	"customers":  "customers",
@@ -89,6 +94,8 @@ func addJobWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("customers", "", "Customer IDs (comma-separated)")
 	cmd.Flags().String("work-types", "", "Work type IDs (comma-separated)")
 	cmd.Flags().String("locations", "", "Location IDs (comma-separated)")
+	cmd.Flags().String("customer-vessels", "", "Customer-owned vessels as JSON, e.g. '[{\"customer_id\":\"...\",\"vessel_key\":\"...\"}]' (keys from the customer's vessels map)")
+	cmd.Flags().String("booking-requests", "", "OpenTug booking requests as JSON, e.g. '[{\"id\":\"...\"}]'")
 }
 
 func init() {
@@ -189,6 +196,9 @@ func runJobsCreate(cmd *cobra.Command, args []string) error {
 	body := bodyFromFlags(cmd, jobFlags)
 	bodyFromBoolFlags(cmd, body, jobBoolFlags)
 	bodyFromArrayFlags(cmd, body, jobArrayFlags)
+	if err := bodyFromJSONFlags(cmd, body, jobJSONFlags); err != nil {
+		return err
+	}
 
 	response, err := c.Post("jobs", wrapBody("job", body))
 	if err != nil {
@@ -213,6 +223,9 @@ func runJobsUpdate(cmd *cobra.Command, args []string) error {
 	body := bodyFromFlags(cmd, jobFlags)
 	bodyFromBoolFlags(cmd, body, jobBoolFlags)
 	bodyFromArrayFlags(cmd, body, jobArrayFlags)
+	if err := bodyFromJSONFlags(cmd, body, jobJSONFlags); err != nil {
+		return err
+	}
 
 	response, err := c.Put(fmt.Sprintf("jobs/%s", id), wrapBody("job", body))
 	if err != nil {

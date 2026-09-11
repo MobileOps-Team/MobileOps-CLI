@@ -43,6 +43,7 @@ var deficienciesUpdateCmd = &cobra.Command{
 var deficiencyFlags = map[string]string{
 	"user-id":               "user_id",
 	"date":                  "date",
+	"created-at":            "created_at",
 	"resolution-date":       "resolution_date",
 	"vessel-id":             "vessel_id",
 	"component-id":          "component_id",
@@ -54,7 +55,6 @@ var deficiencyFlags = map[string]string{
 	"root-cause":            "root_cause",
 	"corrective-actions":    "corrective_actions",
 	"location":              "location",
-	"manager-notes":         "manager_notes",
 	"code-id":               "code_id",
 	"reference-number":      "reference_number",
 }
@@ -72,6 +72,7 @@ var deficiencyArrayFlags = map[string]string{
 func addDeficiencyWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("user-id", "", "User ID")
 	cmd.Flags().String("date", "", "Date")
+	cmd.Flags().String("created-at", "", "Creation timestamp (ISO 8601); backdates the record")
 	cmd.Flags().String("resolution-date", "", "Resolution date")
 	cmd.Flags().String("vessel-id", "", "Vessel ID")
 	cmd.Flags().String("component-id", "", "Component ID")
@@ -83,7 +84,6 @@ func addDeficiencyWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("root-cause", "", "Root cause")
 	cmd.Flags().String("corrective-actions", "", "Corrective actions")
 	cmd.Flags().String("location", "", "Location")
-	cmd.Flags().String("manager-notes", "", "Manager notes")
 	cmd.Flags().String("code-id", "", "Code ID")
 	cmd.Flags().String("reference-number", "", "Reference number")
 	cmd.Flags().Bool("self-resolve", false, "Self resolve")

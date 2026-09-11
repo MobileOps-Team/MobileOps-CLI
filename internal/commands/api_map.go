@@ -5,7 +5,6 @@ var apiCoverage = map[string][]string{
 	"vessels get":    {"GET /assets/{id}"},
 	"vessels create": {"POST /assets"},
 	"vessels update": {"PUT /assets/{id}"},
-	"vessels specs":  {"GET /vessel-specs"},
 
 	"jobs list":                {"GET /jobs"},
 	"jobs get":                 {"GET /jobs/{id}"},
@@ -167,4 +166,14 @@ var nonAPICommands = map[string]bool{
 	"version":     true,
 	"update":      true,
 	"tree":        true,
+}
+
+// apiFieldIgnored lists contract fields the CLI deliberately has no flag for,
+// keyed "VERB /path field" (body fields as "wrapper.field", query params as
+// "?name"), each with the reason. TestAPIFieldCoverage skips these.
+var apiFieldIgnored = map[string]string{
+	"POST /personnel-documents personnel_document.issue_date_string":      "free-text variant of issue_date that bypasses date validation; use --issue-date",
+	"POST /personnel-documents personnel_document.expire_date_string":     "free-text variant of expire_date that bypasses date validation; use --expire-date",
+	"PUT /personnel-documents/{id} personnel_document.issue_date_string":  "free-text variant of issue_date that bypasses date validation; use --issue-date",
+	"PUT /personnel-documents/{id} personnel_document.expire_date_string": "free-text variant of expire_date that bypasses date validation; use --expire-date",
 }

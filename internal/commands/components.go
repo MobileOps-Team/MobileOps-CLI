@@ -48,12 +48,13 @@ var componentFlags = map[string]string{
 	"ultra-field-template-id": "ultra_field_template_id",
 	"hours":                   "hours",
 	"lifetime-hours":          "lifetime_hours",
+	"specifications":          "specifications",
 }
 
 var componentBoolFlags = map[string]string{
-	"has-hours":    "has_hours",
-	"critical":     "critical",
-	"reset-hours":  "reset_hours",
+	"has-hours":   "has_hours",
+	"critical":    "critical",
+	"reset-hours": "reset_hours",
 }
 
 func addComponentWriteFlags(cmd *cobra.Command) {
@@ -64,6 +65,7 @@ func addComponentWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("ultra-field-template-id", "", "Ultra field template ID")
 	cmd.Flags().String("hours", "", "Hours")
 	cmd.Flags().String("lifetime-hours", "", "Lifetime hours")
+	cmd.Flags().String("specifications", "", "Free-text specifications")
 	cmd.Flags().Bool("has-hours", false, "Has hours")
 	cmd.Flags().Bool("critical", false, "Critical")
 	cmd.Flags().Bool("reset-hours", false, "Reset hours")

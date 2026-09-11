@@ -58,7 +58,6 @@ func addVesselSpecWriteFlags(cmd *cobra.Command) {
 func init() {
 	vesselSpecsListCmd.Flags().Int("page", 1, "Page number")
 	vesselSpecsListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
-	vesselSpecsListCmd.Flags().String("vessel-id", "", "Filter by vessel ID")
 
 	addVesselSpecWriteFlags(vesselSpecsCreateCmd)
 	addVesselSpecWriteFlags(vesselSpecsUpdateCmd)
@@ -75,12 +74,7 @@ func runVesselSpecsList(cmd *cobra.Command, args []string) error {
 		return handleClientError(err)
 	}
 
-	params := paginationParams(cmd)
-	if v, _ := cmd.Flags().GetString("vessel-id"); v != "" {
-		params["vessel_id"] = v
-	}
-
-	response, err := c.Get("vessel-specs", params)
+	response, err := c.Get("vessel-specs", paginationParams(cmd))
 	if err != nil {
 		return handleClientError(err)
 	}

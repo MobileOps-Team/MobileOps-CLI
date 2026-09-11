@@ -40,13 +40,6 @@ var vesselsUpdateCmd = &cobra.Command{
 	RunE:  runVesselsUpdate,
 }
 
-var vesselsSpecsCmd = &cobra.Command{
-	Use:   "specs VESSEL_ID",
-	Short: "List specs for a vessel",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runVesselsSpecs,
-}
-
 var vesselFlags = map[string]string{
 	"name":                   "name",
 	"division-id":            "division_id",
@@ -117,7 +110,6 @@ func init() {
 	vesselsCmd.AddCommand(vesselsGetCmd)
 	vesselsCmd.AddCommand(vesselsCreateCmd)
 	vesselsCmd.AddCommand(vesselsUpdateCmd)
-	vesselsCmd.AddCommand(vesselsSpecsCmd)
 }
 
 func runVesselsList(cmd *cobra.Command, args []string) error {
@@ -157,7 +149,7 @@ func runVesselsGet(cmd *cobra.Command, args []string) error {
 
 	vesselID := envelope.ExtractID(response)
 	env := envelope.WrapRecord(response, "Vessel", []string{
-		fmt.Sprintf("mobileops vessels specs %s", vesselID),
+		fmt.Sprintf("mobileops vessel-specs list --json | jq '.data[] | select(.vessel_id == %s)'", vesselID),
 		fmt.Sprintf("mobileops components list --vessel-id %s", vesselID),
 		fmt.Sprintf("mobileops jobs list --vessel-id %s", vesselID),
 		fmt.Sprintf("mobileops work-requests list --vessel-id %s", vesselID),
@@ -205,26 +197,6 @@ func runVesselsUpdate(cmd *cobra.Command, args []string) error {
 
 	env := envelope.WrapRecord(response, "Vessel updated", []string{
 		fmt.Sprintf("mobileops vessels get %s", id),
-	})
-	formatter.Output(env, jsonOutput)
-	return nil
-}
-
-func runVesselsSpecs(cmd *cobra.Command, args []string) error {
-	vesselID := args[0]
-	c, err := client.New("", "", "", envFlag)
-	if err != nil {
-		return handleClientError(err)
-	}
-
-	response, err := c.Get("vessel-specs", map[string]string{"vessel_id": vesselID})
-	if err != nil {
-		return handleClientError(err)
-	}
-
-	env := envelope.WrapCollection(response, "vessel specs", []string{
-		fmt.Sprintf("mobileops vessels get %s", vesselID),
-		fmt.Sprintf("mobileops components list --vessel-id %s", vesselID),
 	})
 	formatter.Output(env, jsonOutput)
 	return nil

@@ -43,6 +43,7 @@ var observationsUpdateCmd = &cobra.Command{
 var observationFlags = map[string]string{
 	"user-id":               "user_id",
 	"date":                  "date",
+	"created-at":            "created_at",
 	"vessel-id":             "vessel_id",
 	"description":           "description",
 	"corrective-actions":    "corrective_actions",
@@ -71,6 +72,7 @@ var observationArrayFlags = map[string]string{
 func addObservationWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("user-id", "", "User ID")
 	cmd.Flags().String("date", "", "Date (YYYY-MM-DD)")
+	cmd.Flags().String("created-at", "", "Creation timestamp (ISO 8601); backdates the record")
 	cmd.Flags().String("vessel-id", "", "Vessel ID")
 	cmd.Flags().String("description", "", "Description")
 	cmd.Flags().String("corrective-actions", "", "Corrective actions")

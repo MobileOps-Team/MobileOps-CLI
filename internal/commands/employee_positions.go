@@ -47,16 +47,11 @@ var employeePositionFlags = map[string]string{
 	"hex-color":        "hex_color",
 }
 
-var employeePositionBoolFlags = map[string]string{
-	"active": "active",
-}
-
 func addEmployeePositionWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("name", "", "Position name")
 	cmd.Flags().String("description", "", "Description")
 	cmd.Flags().String("reference-number", "", "Reference number")
 	cmd.Flags().String("hex-color", "", "Hex color")
-	cmd.Flags().Bool("active", false, "Active")
 }
 
 func init() {
@@ -117,7 +112,6 @@ func runEmployeePositionsCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	body := bodyFromFlags(cmd, employeePositionFlags)
-	bodyFromBoolFlags(cmd, body, employeePositionBoolFlags)
 
 	response, err := c.Post("employee-positions", wrapBody("employee_position", body))
 	if err != nil {
@@ -140,7 +134,6 @@ func runEmployeePositionsUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	body := bodyFromFlags(cmd, employeePositionFlags)
-	bodyFromBoolFlags(cmd, body, employeePositionBoolFlags)
 
 	response, err := c.Put(fmt.Sprintf("employee-positions/%s", id), wrapBody("employee_position", body))
 	if err != nil {
