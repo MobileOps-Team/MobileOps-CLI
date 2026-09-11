@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	githubRepo     = "MobileOps-Team/mobileops-cli"
-	releasesURL    = "https://api.github.com/repos/" + githubRepo + "/releases/latest"
-	cacheDuration  = 24 * time.Hour
-	cacheFileName  = "version-check.json"
-	httpTimeout    = 5 * time.Second
-	updateTimeout  = 60 * time.Second
+	githubRepo    = "MobileOps-Team/mobileops-cli"
+	releasesURL   = "https://api.github.com/repos/" + githubRepo + "/releases/latest"
+	cacheDuration = 24 * time.Hour
+	cacheFileName = "version-check.json"
+	httpTimeout   = 5 * time.Second
+	updateTimeout = 60 * time.Second
 )
 
 // versionCache holds the cached version check result.
@@ -177,6 +177,36 @@ func parseVersion(v string) [3]int {
 	return result
 }
 
+func CanSelfUpdate() bool {
+	execPath, err := os.Executable()
+	if err != nil {
+		return false
+	}
+	execPath, err = filepath.EvalSymlinks(execPath)
+	if err != nil {
+		return false
+	}
+	f, err := os.CreateTemp(filepath.Dir(execPath), ".mobileops-write-check-*")
+	if err != nil {
+		return false
+	}
+	f.Close()
+	os.Remove(f.Name())
+	return true
+}
+
+func AutoUpdateEnabled() bool {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("MOBILEOPS_AUTO_UPDATE"))) {
+	case "0", "false", "no", "off":
+		return false
+	}
+	return true
+}
+
+func AutoUpdate(latest string) error {
+	return install(latest, io.Discard)
+}
+
 func SelfUpdate(currentVersion string) error {
 	latest, err := FetchLatestVersion()
 	if err != nil {
@@ -189,7 +219,10 @@ func SelfUpdate(currentVersion string) error {
 	}
 
 	fmt.Printf("Updating v%s -> v%s ...\n", currentVersion, latest)
+	return install(latest, os.Stdout)
+}
 
+func install(latest string, out io.Writer) error {
 	osName := runtime.GOOS
 	archName := runtime.GOARCH
 
@@ -254,7 +287,7 @@ func SelfUpdate(currentVersion string) error {
 
 	_ = writeCache(latest)
 
-	fmt.Printf("Successfully updated to v%s\n", latest)
+	fmt.Fprintf(out, "Successfully updated to v%s\n", latest)
 	return nil
 }
 

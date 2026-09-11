@@ -1134,7 +1134,8 @@ mobileops vessel-documents create --vessel-id <new_vessel_id> --name "Safety Cer
 
 ```bash
 mobileops version                             # Check CLI version
-mobileops update                              # Self-update the binary and this skill
+mobileops update                              # Update now (binary + this skill); the CLI also self-updates daily on its own
+                                              # set MOBILEOPS_AUTO_UPDATE=0 to pin a version
 mobileops tree                                # Print full command tree
 mobileops --help --agent                      # Machine-readable manifest (commands, flags, API operation per command)
 ```

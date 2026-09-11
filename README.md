@@ -116,17 +116,34 @@ See [`skills/mobileops/SKILL.md`](skills/mobileops/SKILL.md) for the full skill 
 
 ## Updating
 
+The CLI keeps itself current. Every command checks GitHub Releases in the
+background (once a day) and, when a newer version exists, replaces its own
+binary and refreshes the installed skill. You'll see one line on stderr:
+
+```
+✓ mobileops updated to v0.3.0 (takes effect on the next command)
+```
+
+If the binary lives somewhere the current user cannot write (for example a
+root-owned `/usr/local/bin`), it falls back to a reminder instead:
+
+```
+⚠ Update available: v0.2.1 → v0.3.0
+  Run: mobileops update
+```
+
+To pin a version (CI, agent runners), set `MOBILEOPS_AUTO_UPDATE=0`.
+
 ```bash
-mobileops update                   # Self-update to the latest version
+mobileops update                   # Update now (binary + skill)
 mobileops version                  # Check current version
 ```
 
-The CLI checks for updates in the background. When a new version is available, you'll see:
+### Releasing
 
-```
-⚠ Update available: v0.1.0 → v0.2.0
-  Run: mobileops update
-```
+Merging to `master` with a bumped `internal/version/version.go` is a release:
+CI tags the commit `vX.Y.Z` and GoReleaser publishes the binaries. Pull
+requests that change the CLI without bumping the version fail CI.
 
 ## Configuration
 

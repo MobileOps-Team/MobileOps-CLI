@@ -32,9 +32,11 @@ https://www.mobileops.at/openapi.yaml.
    skill, so a command that is not documented there is effectively invisible.
 5. `make build && make test && make api-check`, then run a read-only command
    against production (`bin/mobileops <resource> list --limit 2 --json`).
-6. Bump `internal/version/version.go`, tag `vX.Y.Z`, push the tag. GoReleaser
-   publishes the binaries; `mobileops update` then self-updates and re-installs
-   the skill with `npx skills update MobileOps-Team/mobileops-cli`.
+6. Bump `internal/version/version.go` in the same PR (CI fails otherwise).
+   Merging to master tags `vX.Y.Z` and runs GoReleaser (`release.yml`); users'
+   binaries then self-update within a day and reinstall the skill with
+   `npx skills update MobileOps-Team/mobileops-cli`. Never tag by hand unless
+   the workflow failed.
 
 `mobileops --help --agent` is generated from the cobra tree plus
 `apiCoverage`, so it never needs a manual edit.

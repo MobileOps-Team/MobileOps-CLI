@@ -30,9 +30,20 @@ var rootCmd = &cobra.Command{
 		if versionCheckCh == nil {
 			return
 		}
-		if latest := <-versionCheckCh; latest != "" {
-			fmt.Fprintf(os.Stderr, "\n\u26a0 Update available: v%s \u2192 v%s\n  Run: mobileops update\n", cliVersion, latest)
+		latest := <-versionCheckCh
+		if latest == "" {
+			return
 		}
+
+		if updater.AutoUpdateEnabled() && updater.CanSelfUpdate() {
+			if err := updater.AutoUpdate(latest); err == nil {
+				fmt.Fprintf(os.Stderr, "\n\u2713 mobileops updated to v%s (takes effect on the next command)\n", latest)
+				updateSkillQuiet()
+				return
+			}
+		}
+
+		fmt.Fprintf(os.Stderr, "\n\u26a0 Update available: v%s \u2192 v%s\n  Run: mobileops update\n", cliVersion, latest)
 	},
 }
 
