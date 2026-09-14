@@ -22,7 +22,14 @@ jobs:
           echo "$changed"
 
           code_changed=$(echo "$changed" | grep -E '^(cmd/|internal/)' | grep -v '^internal/version/version.go$' || true)
-          if [ -n "$code_changed" ] && ! echo "$changed" | grep -qx 'internal/version/version.go'; then
+          version_changed=$(echo "$changed" | grep -x 'internal/version/version.go' || true)
+
+          if [ -z "$code_changed" ] && [ -z "$version_changed" ]; then
+            echo "No CLI code or version change; no release needed."
+            exit 0
+          fi
+
+          if [ -n "$code_changed" ] && [ -z "$version_changed" ]; then
             echo "::error::This PR changes the CLI but not internal/version/version.go." \
                  "Bump Version so that merging to master publishes a release."
             exit 1
