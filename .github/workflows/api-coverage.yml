@@ -2,16 +2,23 @@ name: API coverage
 
 on:
   schedule:
-    - cron: "0 13 * * 1" # Mondays 13:00 UTC
+    - cron: "0 13 * * *" # daily 13:00 UTC
   workflow_dispatch:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
 
+concurrency:
+  group: api-coverage-${{ github.event_name == 'pull_request' && github.ref || 'tracking' }}
+
 jobs:
   api-coverage:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -21,4 +28,59 @@ jobs:
           go-version-file: go.mod
 
       - name: Compare CLI commands with the published OpenAPI spec
-        run: make api-check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_TITLE: CLI out of sync with REST API
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            make api-check
+            exit
+          fi
+
+          set +e
+          make api-check > api-check.log 2>&1
+          check_status=$?
+          set -e
+          cat api-check.log
+
+          gaps=$(grep -E '^[[:space:]]+- ' api-check.log | sed -E 's/^[[:space:]]+- /- /' || true)
+          if [ "$check_status" -ne 0 ] && [ -z "$gaps" ]; then
+            echo "::error::api-check failed without listing gaps; see the log above."
+            exit 1
+          fi
+
+          issue=$(gh issue list --state open --search "\"$ISSUE_TITLE\" in:title" \
+            --json number,title --jq ".[] | select(.title == \"$ISSUE_TITLE\") | .number" | head -n 1)
+
+          if [ -z "$gaps" ]; then
+            if [ -n "$issue" ]; then
+              gh issue close "$issue" --comment "\`make api-check\` passes against the published spec ($RUN_URL)."
+            fi
+            echo "The CLI covers the published spec."
+            exit 0
+          fi
+
+          echo "::warning::The CLI is out of sync with the published spec; tracked in the \"$ISSUE_TITLE\" issue."
+
+          cat > issue-body.md <<EOF
+          The published REST API spec (https://www.mobileops.at/openapi.yaml) has operations the CLI does not cover.
+
+          \`make api-check\` reports:
+
+          $gaps
+
+          Follow CONTRIBUTING.md to add or remove the commands. This issue closes automatically once \`make api-check\` passes on master.
+          Maintained by \`.github/workflows/api-coverage.yml\` (last run: $RUN_URL).
+          EOF
+
+          if [ -z "$issue" ]; then
+            gh issue create --title "$ISSUE_TITLE" --body-file issue-body.md
+          else
+            old_gaps=$(gh issue view "$issue" --json body --jq .body | tr -d '\r' | grep -E '^- ' || true)
+            gh issue edit "$issue" --body-file issue-body.md
+            if [ "$old_gaps" != "$gaps" ]; then
+              gh issue comment "$issue" --body "The gap list changed ($RUN_URL)."
+            fi
+          fi

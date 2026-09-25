@@ -41,7 +41,7 @@ The spec is the contract: implement what it documents, not what the Rails contro
 - **`TestAPICoverage`** (operations): every spec operation must have a command in `apiCoverage` (`api_map.go`), every command must call an operation the spec has, and no command may call an operation whose description starts with "Not currently available". Operations that should never be commands (webhooks) go in `apiIgnored` with a reason.
 - **`TestAPIFieldCoverage`** (fields): runs every command against a fake API with all flags set and diffs the query parameters and body fields it sends against the spec, in both directions. A contract field you deliberately don't expose goes in `apiFieldIgnored` with a reason.
 
-The same check runs weekly in this repository (`.github/workflows/api-coverage.yml`) and on every REST API pull request in MobileOps-Web, so a new endpoint shows up as a red check without anyone remembering to look.
+The same check runs daily and on every push in this repository (`.github/workflows/api-coverage.yml`) and on every REST API pull request in MobileOps-Web, so a new endpoint shows up without anyone remembering to look. When the published spec gets ahead of the CLI, the workflow opens a single "CLI out of sync with REST API" issue listing the gaps, and closes it once `make api-check` passes on master.
 
 ### Adding or changing a command
 
