@@ -92,6 +92,8 @@ func init() {
 	nonconformitiesListCmd.Flags().Int("page", 1, "Page number")
 	nonconformitiesListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
 	nonconformitiesListCmd.Flags().String("vessel-id", "", "Filter by vessel ID")
+	nonconformitiesListCmd.Flags().Bool("include-ultra-fields", false, "Include custom ultra fields")
+	nonconformitiesGetCmd.Flags().Bool("include-ultra-fields", false, "Include custom ultra fields")
 
 	addNonconformityWriteFlags(nonconformitiesCreateCmd)
 	addNonconformityWriteFlags(nonconformitiesUpdateCmd)
@@ -113,6 +115,10 @@ func runNonconformitiesList(cmd *cobra.Command, args []string) error {
 		params["vessel_id"] = v
 	}
 
+	if v, _ := cmd.Flags().GetBool("include-ultra-fields"); v {
+		params["include_ultra_fields"] = "true"
+	}
+
 	response, err := c.Get("nonconformities", params)
 	if err != nil {
 		return handleClientError(err)
@@ -131,7 +137,12 @@ func runNonconformitiesGet(cmd *cobra.Command, args []string) error {
 		return handleClientError(err)
 	}
 
-	response, err := c.Get(fmt.Sprintf("nonconformities/%s", id), nil)
+	params := map[string]string{}
+	if v, _ := cmd.Flags().GetBool("include-ultra-fields"); v {
+		params["include_ultra_fields"] = "true"
+	}
+
+	response, err := c.Get(fmt.Sprintf("nonconformities/%s", id), params)
 	if err != nil {
 		return handleClientError(err)
 	}

@@ -302,7 +302,10 @@ mobileops nonconformities create --vessel-id <id> --description "Safety protocol
 # Update a nonconformity
 mobileops nonconformities update <id> --status "resolved" --corrective-actions "Retrained crew" --json
 
-# Filters: --vessel-id
+# Include the company's Nonconformity ultra fields (select values resolved to names)
+mobileops nonconformities get <id> --include-ultra-fields --json
+
+# Filters: --vessel-id, --include-ultra-fields (list and get)
 ```
 
 **API: GET /api/nonconformities, GET /api/nonconformities/:id, POST /api/nonconformities, PUT /api/nonconformities/:id**
@@ -332,7 +335,10 @@ mobileops observations create --vessel-id <id> --user-id <id> --description "Hos
 # Update an observation
 mobileops observations update <id> --status "Resolved" --corrective-actions "Replaced hose" --json
 
-# Filters: --audit-type, --audit-id, --vessel-id, --start-date, --end-date, --status
+# Include the company's Observation ultra fields (select values resolved to names)
+mobileops observations get <id> --include-ultra-fields --json
+
+# Filters: --audit-type, --audit-id, --vessel-id, --start-date, --end-date, --status, --include-ultra-fields (list and get)
 ```
 
 **API: GET /api/observations, GET /api/observations/:id, POST /api/observations, PUT /api/observations/:id**
@@ -681,7 +687,11 @@ mobileops form-instances list --json
 mobileops form-instances list --template-id <form_template_id> --json
 mobileops form-instances list --job-id <job_id> --json
 
-# Filters: --template-id, --job-id
+# Most recently updated instances created since a given time
+mobileops form-instances list --created-after 2026-08-01T00:00:00Z --sort updated_at --json
+
+# Filters: --template-id, --job-id, --created-after, --created-before, --updated-after, --updated-before (ISO 8601, inclusive)
+# Sorting: --sort created_at|updated_at (default created_at), --order desc|asc (default desc)
 ```
 
 **API: GET /api/form-instances (read-only)**
