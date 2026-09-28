@@ -23,6 +23,12 @@ func init() {
 	formInstancesListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
 	formInstancesListCmd.Flags().String("template-id", "", "Filter by form template ID")
 	formInstancesListCmd.Flags().String("job-id", "", "Filter by job ID")
+	formInstancesListCmd.Flags().String("created-after", "", "Created on or after this time (ISO 8601)")
+	formInstancesListCmd.Flags().String("created-before", "", "Created on or before this time (ISO 8601)")
+	formInstancesListCmd.Flags().String("updated-after", "", "Updated on or after this time (ISO 8601)")
+	formInstancesListCmd.Flags().String("updated-before", "", "Updated on or before this time (ISO 8601)")
+	formInstancesListCmd.Flags().String("sort", "", "Sort by created_at (default) or updated_at")
+	formInstancesListCmd.Flags().String("order", "", "Sort direction: desc (default) or asc")
 
 	formInstancesCmd.AddCommand(formInstancesListCmd)
 }
@@ -34,11 +40,20 @@ func runFormInstancesList(cmd *cobra.Command, args []string) error {
 	}
 
 	params := paginationParams(cmd)
-	if v, _ := cmd.Flags().GetString("template-id"); v != "" {
-		params["form_template_id"] = v
+	listFilters := map[string]string{
+		"template-id":    "form_template_id",
+		"job-id":         "job_id",
+		"created-after":  "created_at_gte",
+		"created-before": "created_at_lte",
+		"updated-after":  "updated_at_gte",
+		"updated-before": "updated_at_lte",
+		"sort":           "sort",
+		"order":          "order",
 	}
-	if v, _ := cmd.Flags().GetString("job-id"); v != "" {
-		params["job_id"] = v
+	for flag, paramKey := range listFilters {
+		if v, _ := cmd.Flags().GetString(flag); v != "" {
+			params[paramKey] = v
+		}
 	}
 
 	response, err := c.Get("form-instances", params)

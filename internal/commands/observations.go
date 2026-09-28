@@ -101,6 +101,8 @@ func init() {
 	observationsListCmd.Flags().String("start-date", "", "Earliest observation date (YYYY-MM-DD)")
 	observationsListCmd.Flags().String("end-date", "", "Latest observation date (YYYY-MM-DD)")
 	observationsListCmd.Flags().String("status", "", "Filter by status (e.g. Resolved)")
+	observationsListCmd.Flags().Bool("include-ultra-fields", false, "Include custom ultra fields")
+	observationsGetCmd.Flags().Bool("include-ultra-fields", false, "Include custom ultra fields")
 
 	addObservationWriteFlags(observationsCreateCmd)
 	addObservationWriteFlags(observationsUpdateCmd)
@@ -132,6 +134,10 @@ func runObservationsList(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if v, _ := cmd.Flags().GetBool("include-ultra-fields"); v {
+		params["include_ultra_fields"] = "true"
+	}
+
 	response, err := c.Get("observations", params)
 	if err != nil {
 		return handleClientError(err)
@@ -150,7 +156,12 @@ func runObservationsGet(cmd *cobra.Command, args []string) error {
 		return handleClientError(err)
 	}
 
-	response, err := c.Get(fmt.Sprintf("observations/%s", id), nil)
+	params := map[string]string{}
+	if v, _ := cmd.Flags().GetBool("include-ultra-fields"); v {
+		params["include_ultra_fields"] = "true"
+	}
+
+	response, err := c.Get(fmt.Sprintf("observations/%s", id), params)
 	if err != nil {
 		return handleClientError(err)
 	}
