@@ -51,6 +51,7 @@ Users may use different terms for the same concepts. Always map to the correct C
 | manufacturer, brand | `makes` | Equipment manufacturers |
 | position, role, title | `employee-positions` | Crew job titles |
 | department, fleet group | `divisions` | Organizational groupings |
+| proposal, quote, bid, deal, opportunity, sales pipeline | `proposals` | Read-only; includes quoted value and invoiced/paid rollup |
 
 When a user asks about "assets" or "boats", use `mobileops vessels`. When they ask about "employees", use `mobileops crew`. Always translate to the correct CLI resource name.
 
@@ -679,6 +680,33 @@ mobileops invoice-statements update <id> --integration-status "synced" --json
 
 ---
 
+### Proposals
+
+```bash
+# List proposals, most recently updated first (archived excluded)
+mobileops proposals list --json
+mobileops proposals list --outcome open --json
+mobileops proposals list --customer-id <customer_id> --outcome won --json
+mobileops proposals list --updated-since 2026-09-01T00:00:00Z --json
+mobileops proposals list --from 2026-10-01 --to 2026-12-31 --include-archived --json
+
+# Get one proposal with its deal fields and lifecycle rollup
+mobileops proposals get <id> --json
+
+# Filters: --status, --outcome (open|won|lost), --customer-id, --updated-since, --from, --to, --include-archived
+```
+
+**API: GET /api/proposals, GET /api/proposals/:id (read-only; proposals are managed in the app)**
+
+- `outcome`: `won` = Approved, `lost` = Rejected or Expired, `open` = every other status (including custom statuses). `--status` matches an exact status name such as `"Pending Approval"`.
+- `--from`/`--to` filter on the proposal's service window (`start_date`/`end_date`) overlapping the range.
+- Money is integer **US cents**: `quoted_value`, and in `lifecycle_financials` the `invoiced_cents`, `paid_cents` and `outstanding_cents`. Divide by 100 before showing dollars.
+- `lifecycle_financials` rolls up Invoice Statements of the proposal's linked Jobs: `realization_pct` is invoiced ÷ quoted; `coverage` is `none`, `partial` or `invoiced` (every linked job has a statement).
+- `lane` is the first and last ordered location (`origin`, `destination`); `effective_win_probability` is the explicit `win_probability` or the status default.
+- Follow `job_ids` with `mobileops jobs get <id>` and `customer_id` with `mobileops customers get <id>`.
+
+---
+
 ### Form Instances
 
 ```bash
@@ -997,7 +1025,7 @@ A partition is one fuel lift (`quantity`, `cost`, `vendor_*`, `timestamp`) plus 
 | invoice-statements | — | ✅ (integration-status only) | — |
 | position-reports | ✅ | — | — |
 
-Read-only resources: suppliers, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, bunker-partitions
+Read-only resources: proposals, suppliers, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, bunker-partitions
 
 Not available through the API at all (manage them in the MobileOps app): vendors, fuel types, fuel removals, event create/edit/delete.
 
