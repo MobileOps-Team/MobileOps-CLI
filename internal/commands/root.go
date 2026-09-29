@@ -103,6 +103,7 @@ func init() {
 	rootCmd.AddCommand(codesCmd)
 	rootCmd.AddCommand(fuelLevelReadingsCmd)
 	rootCmd.AddCommand(bunkerPartitionsCmd)
+	rootCmd.AddCommand(proposalsCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(treeCmd)
