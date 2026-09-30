@@ -44,6 +44,7 @@ Users may use different terms for the same concepts. Always map to the correct C
 | vendor | `suppliers` | Parts/service providers (read-only) |
 | audit, inspection, SIRE, survey | `audits` | Audits embed their observations, deficiencies and nonconformities |
 | hours of rest, work/rest, fatigue log | `work-rests` | One record per user per day |
+| shift, rotation, hitch, crew schedule, crew change, crew assignment | `shifts` | One crew member on one vessel for a span of time |
 | event, timeline entry, wheelhouse event, job log | `events search` | Read-only search; events are created in the app |
 | code, accounting code, billing code, job code | `codes` | Company-wide or scoped to one vessel |
 | fuel reading, tank level, sounding | `fuel-level-readings` | Tank levels over time |
@@ -914,6 +915,38 @@ Each record holds that day's `periods`, `reviews`, `attestations`, `violations` 
 
 ---
 
+### Shifts (Crew Schedule)
+
+```bash
+# List shifts, newest start first (cancelled shifts included; check `cancel`)
+mobileops shifts list --json
+mobileops shifts list --vessel-id <vessel_id> --from 2026-10-01 --to 2026-10-31 --json
+mobileops shifts list --user-id <user_id> --json
+
+# Get a specific shift
+mobileops shifts get <id> --json
+
+# Schedule a crew member (user, start and end are required)
+mobileops shifts create --user-id <user_id> --vessel-id <vessel_id> --from 2026-10-01T06:00:00Z --to 2026-10-15T06:00:00Z --employee-position-id <id> --json
+
+# Move a shift, or cancel it and tell the crew member
+mobileops shifts update <id> --from 2026-10-02T06:00:00Z --to 2026-10-16T06:00:00Z --json
+mobileops shifts update <id> --cancel --notify --json
+
+# Delete a shift (the crew member is NOT notified)
+mobileops shifts delete <id> --json
+
+# Filters: --from, --to (a shift matches when it overlaps the window), --user-id, --vessel-id, --employee-position-id
+```
+
+**API: GET /api/shifts, GET /api/shifts/:id, POST /api/shifts, PUT /api/shifts/:id, DELETE /api/shifts/:id**
+
+Writable fields: `--user-id`, `--vessel-id`, `--from`, `--to` (ISO 8601, UTC unless an offset is given), `--employee-position-id`, `--employee-rate-id`, `--shift-type-id`, `--wh-extra-rate-ids` (comma-separated), `--notes`, `--notify` (bool), `--cancel` (bool). Names (`user_name`, `vessel_name`, position, rate and shift type names) are filled in from the IDs.
+
+`--notify` emails and texts the crew member. Once a shift has notify set, **every** update re-sends the notification and clears their acknowledgement, so confirm with the user before updating a notified shift. Delete never notifies; to tell the crew member, prefer `update <id> --cancel --notify` over delete. Delete needs an API key with delete permission.
+
+---
+
 ### Events
 
 ```bash
@@ -1011,6 +1044,7 @@ A partition is one fuel lift (`quantity`, `cost`, `vendor_*`, `timestamp`) plus 
 | maintenance-reports | ✅ | ✅ | — |
 | vessel-documents | ✅ | ✅ | ✅ |
 | personnel-documents | ✅ | ✅ | ✅ |
+| shifts | ✅ | ✅ | ✅ |
 | vessel-specs | ✅ | ✅ | — |
 | customers | ✅ | ✅ | — |
 | makes | ✅ | — | — |

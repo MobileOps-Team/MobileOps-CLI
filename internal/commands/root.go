@@ -100,6 +100,7 @@ func init() {
 	rootCmd.AddCommand(auditsCmd)
 	rootCmd.AddCommand(eventsCmd)
 	rootCmd.AddCommand(workRestsCmd)
+	rootCmd.AddCommand(shiftsCmd)
 	rootCmd.AddCommand(codesCmd)
 	rootCmd.AddCommand(fuelLevelReadingsCmd)
 	rootCmd.AddCommand(bunkerPartitionsCmd)
