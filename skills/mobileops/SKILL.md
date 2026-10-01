@@ -190,6 +190,8 @@ mobileops crew delete <id> --json
 
 Writable fields: `--first-name`, `--last-name`, `--email`, `--password`, `--password-confirmation` (required on create, 8-128 chars), `--phone`, `--time-zone`, `--address`, `--birthday`, `--passport-number`, `--mmc-number`, `--employee-number`, `--employee-code`, `--archived-date`, `--receive-notifications` (bool), `--login-disabled` (bool), `--archived` (bool), `--exclude-tr` (bool), `--division-ids` (comma-separated), `--employee-positions` (comma-separated), `--primary-assets` (comma-separated), `--roles` (comma-separated; replaces roles wholesale, admin roles are stripped), `--pay-rates` (JSON array of `{"position_id","rate"}`, rate in cents per hour)
 
+Create only: `--send-welcome-email` (bool) emails the new crew member a welcome message telling them to sign in with the company's Microsoft or Google single sign-on. It is ignored when the company has neither SSO provider enabled or when `--login-disabled` is set. It sends an email to a real person, so confirm with the user before setting it.
+
 ---
 
 ### Components
