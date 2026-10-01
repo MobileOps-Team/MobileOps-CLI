@@ -78,6 +78,11 @@ var crewBoolFlags = map[string]string{
 	"exclude-tr":            "exclude_tr",
 }
 
+// crewCreateTopLevelBoolFlags go beside the "user" wrapper, not inside it.
+var crewCreateTopLevelBoolFlags = map[string]string{
+	"send-welcome-email": "send_welcome_email",
+}
+
 var crewJSONFlags = map[string]string{
 	"pay-rates": "pay_rates",
 }
@@ -121,6 +126,7 @@ func init() {
 	crewListCmd.Flags().Bool("include-ultra-fields", false, "Include custom ultra fields")
 
 	addCrewWriteFlags(crewCreateCmd)
+	crewCreateCmd.Flags().Bool("send-welcome-email", false, "Email the new user a welcome message with sign-in instructions (company must have Microsoft or Google SSO enabled; skipped when --login-disabled)")
 	addCrewWriteFlags(crewUpdateCmd)
 
 	crewCmd.AddCommand(crewListCmd)
@@ -186,7 +192,10 @@ func runCrewCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	response, err := c.Post("users", wrapBody("user", body))
+	payload := wrapBody("user", body)
+	bodyFromBoolFlags(cmd, payload, crewCreateTopLevelBoolFlags)
+
+	response, err := c.Post("users", payload)
 	if err != nil {
 		return handleClientError(err)
 	}
