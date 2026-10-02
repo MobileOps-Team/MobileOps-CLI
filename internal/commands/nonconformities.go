@@ -46,6 +46,7 @@ var nonconformityFlags = map[string]string{
 	"created-at":            "created_at",
 	"vessel-id":             "vessel_id",
 	"plan-of-action":        "plan_of_action",
+	"title":                 "title",
 	"description":           "description",
 	"status":                "status",
 	"notification-group-id": "notification_group_id",
@@ -73,6 +74,7 @@ func addNonconformityWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("created-at", "", "Creation timestamp (ISO 8601); backdates the record")
 	cmd.Flags().String("vessel-id", "", "Vessel ID")
 	cmd.Flags().String("plan-of-action", "", "Plan of action")
+	cmd.Flags().String("title", "", "Title (one-line summary shown in list views)")
 	cmd.Flags().String("description", "", "Description")
 	cmd.Flags().String("status", "", "Status")
 	cmd.Flags().String("notification-group-id", "", "Notification group ID")
