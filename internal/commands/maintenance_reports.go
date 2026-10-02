@@ -41,6 +41,7 @@ var maintenanceReportsUpdateCmd = &cobra.Command{
 }
 
 var maintenanceReportFlags = map[string]string{
+	"title":           "title",
 	"description":     "description",
 	"date":            "date",
 	"created-at":      "created_at",
@@ -56,6 +57,7 @@ var maintenanceReportArrayFlags = map[string]string{
 }
 
 func addMaintenanceReportWriteFlags(cmd *cobra.Command) {
+	cmd.Flags().String("title", "", "Title (one-line summary shown in list views)")
 	cmd.Flags().String("description", "", "Description")
 	cmd.Flags().String("date", "", "Date")
 	cmd.Flags().String("created-at", "", "Creation timestamp (ISO 8601); backdates the record")

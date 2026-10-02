@@ -48,6 +48,7 @@ var workRequestFlags = map[string]string{
 	"vessel-id":             "vessel_id",
 	"component-id":          "component_id",
 	"part-id":               "part_id",
+	"title":                 "title",
 	"description":           "description",
 	"status":                "status",
 	"plan-of-action":        "plan_of_action",
@@ -77,6 +78,7 @@ func addWorkRequestWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("vessel-id", "", "Vessel ID")
 	cmd.Flags().String("component-id", "", "Component ID")
 	cmd.Flags().String("part-id", "", "Part ID")
+	cmd.Flags().String("title", "", "Title (one-line summary shown in list views)")
 	cmd.Flags().String("description", "", "Description")
 	cmd.Flags().String("status", "", "Status")
 	cmd.Flags().String("plan-of-action", "", "Plan of action")

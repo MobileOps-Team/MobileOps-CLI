@@ -45,6 +45,7 @@ var observationFlags = map[string]string{
 	"date":                  "date",
 	"created-at":            "created_at",
 	"vessel-id":             "vessel_id",
+	"title":                 "title",
 	"description":           "description",
 	"corrective-actions":    "corrective_actions",
 	"plan-of-action":        "plan_of_action",
@@ -74,6 +75,7 @@ func addObservationWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("date", "", "Date (YYYY-MM-DD)")
 	cmd.Flags().String("created-at", "", "Creation timestamp (ISO 8601); backdates the record")
 	cmd.Flags().String("vessel-id", "", "Vessel ID")
+	cmd.Flags().String("title", "", "Title (one-line summary shown in list views)")
 	cmd.Flags().String("description", "", "Description")
 	cmd.Flags().String("corrective-actions", "", "Corrective actions")
 	cmd.Flags().String("plan-of-action", "", "Plan of action")
