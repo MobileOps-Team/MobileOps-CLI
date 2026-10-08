@@ -427,6 +427,9 @@ mobileops personnel-documents create --user-id <id> --template-id <id> --issue-d
 # Update a personnel document
 mobileops personnel-documents update <id> --expire-date "2027-06-01" --notes "Renewed" --json
 
+# Set the endorsements a crew member holds (replaces the list; --endorsements "" clears it)
+mobileops personnel-documents update <id> --endorsements <endorsement_id>,<endorsement_id> --json
+
 # Delete a personnel document
 mobileops personnel-documents delete <id> --json
 
@@ -435,7 +438,9 @@ mobileops personnel-documents delete <id> --json
 
 **API: GET /api/personnel-documents, GET /api/personnel-documents/:id, POST /api/personnel-documents, PUT /api/personnel-documents/:id, DELETE /api/personnel-documents/:id, GET /api/personnel-documents/:id/attachments**
 
-Writable fields: `--user-id`, `--template-id`, `--issue-date`, `--expire-date`, `--notes`, `--expire-notification` (bool)
+Writable fields: `--user-id`, `--template-id`, `--issue-date`, `--expire-date`, `--notes`, `--expire-notification` (bool), `--endorsements` (comma-separated)
+
+Endorsements are returned on each document as `endorsements: [{id, name}]`. `--endorsements` takes endorsement IDs, which must belong to the document's template (top-level or child endorsements); an unknown ID returns an error and nothing is saved. The API has no template endpoint, so take IDs from the `endorsements` of other documents with the same `--template-id`, or ask the user.
 
 ---
 

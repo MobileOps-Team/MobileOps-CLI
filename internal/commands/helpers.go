@@ -91,10 +91,15 @@ func bodyFromBoolFlags(cmd *cobra.Command, body map[string]interface{}, flagMap 
 }
 
 // bodyFromArrayFlags adds array flags (comma-separated) to an existing body.
+// An empty value sends an empty array, so `--flag ""` clears the field.
 func bodyFromArrayFlags(cmd *cobra.Command, body map[string]interface{}, flagMap map[string]string) {
 	for flag, param := range flagMap {
 		if cmd.Flags().Changed(flag) {
 			val, _ := cmd.Flags().GetString(flag)
+			if strings.TrimSpace(val) == "" {
+				body[param] = []string{}
+				continue
+			}
 			parts := strings.Split(val, ",")
 			for i := range parts {
 				parts[i] = strings.TrimSpace(parts[i])
