@@ -66,6 +66,10 @@ var personnelDocumentBoolFlags = map[string]string{
 	"expire-notification": "expire_notification",
 }
 
+var personnelDocumentArrayFlags = map[string]string{
+	"endorsements": "endorsements",
+}
+
 func addPersonnelDocumentWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("user-id", "", "User ID")
 	cmd.Flags().String("template-id", "", "Template ID")
@@ -73,6 +77,7 @@ func addPersonnelDocumentWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("expire-date", "", "Expire date")
 	cmd.Flags().String("notes", "", "Notes")
 	cmd.Flags().Bool("expire-notification", false, "Expire notification")
+	cmd.Flags().String("endorsements", "", "Endorsement IDs from the document's template (comma-separated; replaces the current list, \"\" clears it)")
 }
 
 func init() {
@@ -153,6 +158,7 @@ func runPersonnelDocumentsCreate(cmd *cobra.Command, args []string) error {
 
 	body := bodyFromFlags(cmd, personnelDocumentFlags)
 	bodyFromBoolFlags(cmd, body, personnelDocumentBoolFlags)
+	bodyFromArrayFlags(cmd, body, personnelDocumentArrayFlags)
 
 	response, err := c.Post("personnel-documents", wrapBody("personnel_document", body))
 	if err != nil {
@@ -176,6 +182,7 @@ func runPersonnelDocumentsUpdate(cmd *cobra.Command, args []string) error {
 
 	body := bodyFromFlags(cmd, personnelDocumentFlags)
 	bodyFromBoolFlags(cmd, body, personnelDocumentBoolFlags)
+	bodyFromArrayFlags(cmd, body, personnelDocumentArrayFlags)
 
 	response, err := c.Put(fmt.Sprintf("personnel-documents/%s", id), wrapBody("personnel_document", body))
 	if err != nil {
