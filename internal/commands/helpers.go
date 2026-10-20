@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/MobileOps-Team/mobileops-cli/internal/client"
@@ -136,6 +137,17 @@ func listFilters(cmd *cobra.Command, params map[string]string, flagMap map[strin
 	for flag, param := range flagMap {
 		if v, _ := cmd.Flags().GetString(flag); v != "" {
 			params[param] = v
+		}
+	}
+}
+
+// boolListFilters adds boolean query filters that were set explicitly, so
+// `--archived=false` sends archived=false and an unset flag sends nothing.
+func boolListFilters(cmd *cobra.Command, params map[string]string, flagMap map[string]string) {
+	for flag, param := range flagMap {
+		if cmd.Flags().Changed(flag) {
+			val, _ := cmd.Flags().GetBool(flag)
+			params[param] = strconv.FormatBool(val)
 		}
 	}
 }
