@@ -133,6 +133,15 @@ var apiCoverage = map[string][]string{
 	"proposals list": {"GET /proposals"},
 	"proposals get":  {"GET /proposals/{id}"},
 
+	"incidents list": {"GET /incidents"},
+	"incidents get":  {"GET /incidents/{id}"},
+
+	"near-misses list": {"GET /near-misses"},
+	"near-misses get":  {"GET /near-misses/{id}"},
+
+	"announcements list": {"GET /announcements"},
+	"announcements get":  {"GET /announcements/{id}"},
+
 	"invoice-statements list":   {"GET /invoice-statements"},
 	"invoice-statements update": {"PUT /invoice-statements/{id}"},
 

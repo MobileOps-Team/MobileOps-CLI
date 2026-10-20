@@ -53,6 +53,9 @@ Users may use different terms for the same concepts. Always map to the correct C
 | position, role, title | `employee-positions` | Crew job titles |
 | department, fleet group | `divisions` | Organizational groupings |
 | proposal, quote, bid, deal, opportunity, sales pipeline | `proposals` | Read-only; includes quoted value and invoiced/paid rollup |
+| incident, accident, injury report, spill, lagging indicator, OSHA recordable, lost time | `incidents` | Read-only; injury/lost-time/notification flags, witness statements |
+| near miss, hazard observation, NMHO, stop work, leading indicator | `near-misses` | Read-only Near Miss Hazard Observation reports |
+| announcement, safety notice, bulletin, acknowledgement | `announcements` | Read-only; includes who acknowledged each one |
 
 When a user asks about "assets" or "boats", use `mobileops vessels`. When they ask about "employees", use `mobileops crew`. Always translate to the correct CLI resource name.
 
@@ -715,6 +718,75 @@ mobileops proposals get <id> --json
 
 ---
 
+### Incidents
+
+```bash
+# List incident reports, most recent incident date first (archived included)
+mobileops incidents list --json
+mobileops incidents list --from 2026-01-01 --to 2026-03-31 --json
+mobileops incidents list --vessel-id <vessel_id> --archived=false --json
+mobileops incidents list --updated-since 2026-10-01T00:00:00Z --json
+
+# Get one incident with witness statements and comments
+mobileops incidents get <id> --json
+
+# Filters: --vessel-id, --from, --to, --updated-since, --archived (true = only archived, =false = only unarchived)
+```
+
+**API: GET /api/incidents, GET /api/incidents/:id (read-only; incidents are reported in the app)**
+
+- `--from`/`--to` filter on the incident `date` (a calendar date, `YYYY-MM-DD`), both inclusive.
+- Lagging-indicator fields: `injury`, `fatality`, `lost_time`, `lost_time_days`, `modified_work`, `osha_recordable`, plus `customer_notified`, `coast_guard_notified`, `class_society_notified`. Count incidents per period or vessel from these; a missing record is not proof of zero incidents unless the window was fully paged.
+- `users` are the employees involved; `authorized_users` are the employees assigned to manage the incident; `witnesses` are submitted statements (signatures are not returned).
+- Archived incidents are included by default; pass `--archived=false` to match the app's default list.
+
+---
+
+### Near Misses
+
+```bash
+# List Near Miss Hazard Observation reports, most recent observation date first (archived included)
+mobileops near-misses list --json
+mobileops near-misses list --from 2026-01-01 --to 2026-03-31 --json
+mobileops near-misses list --vessel-id <vessel_id> --archived=false --json
+
+# Get one report
+mobileops near-misses get <id> --json
+
+# Filters: --vessel-id, --from, --to, --updated-since, --archived
+```
+
+**API: GET /api/near-misses, GET /api/near-misses/:id (read-only)**
+
+- `--from`/`--to` filter on `form_date` (`YYYY-MM-DD`), both inclusive; `date` is the same day as entered (`MM/DD/YYYY`).
+- Leading-indicator fields: `stop_work`, `injury_hazard`, `damage_hazard`, `severity` (potential severity), `type`, `behavior_category`, `work_category`, `hazard_category`, `categories`, `status`.
+- `user_id`/`user_name` are `null` when `anonymous` is true. `confidential` reports are hidden from crew in the app but returned here.
+- The same reports also appear in `mobileops forms list --name "Near Miss Hazard Observation"`; prefer `near-misses` for its filters and fixed fields.
+
+---
+
+### Announcements
+
+```bash
+# List announcements, newest first (drafts and archived included)
+mobileops announcements list --json
+mobileops announcements list --published --safety --json
+mobileops announcements list --from 2026-10-01 --to 2026-10-31 --published --json
+
+# Get one announcement with its acknowledgements
+mobileops announcements get <id> --json
+
+# Filters: --from, --to, --updated-since, --published, --safety, --archived (each boolean also takes =false)
+```
+
+**API: GET /api/announcements, GET /api/announcements/:id (read-only)**
+
+- `--from`/`--to` filter on `created_at` by UTC day, both inclusive.
+- `--published=false` returns drafts only. Use `--published` when counting announcements that reached crew.
+- `acknowledgements` lists `user_id`, `user_name` and `acknowledged_at` for each employee who acknowledged; `require_ack` says whether acknowledgement was requested. Audience limits are in `divisions` and `employee_positions` (empty = everyone).
+
+---
+
 ### Form Instances
 
 ```bash
@@ -1066,7 +1138,7 @@ A partition is one fuel lift (`quantity`, `cost`, `vendor_*`, `timestamp`) plus 
 | invoice-statements | — | ✅ (integration-status only) | — |
 | position-reports | ✅ | — | — |
 
-Read-only resources: proposals, suppliers, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, bunker-partitions
+Read-only resources: incidents, near-misses, announcements, proposals, suppliers, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, bunker-partitions
 
 Not available through the API at all (manage them in the MobileOps app): vendors, fuel types, fuel removals, event create/edit/delete.
 
