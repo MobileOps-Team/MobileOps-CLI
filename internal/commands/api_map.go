@@ -163,6 +163,7 @@ var apiCoverage = map[string][]string{
 	"shifts delete":             {"DELETE /shifts/{id}"},
 	"events search":             {"POST /events/search"},
 	"fuel-level-readings list":  {"GET /fuel-level-readings"},
+	"fuel-removals list":        {"GET /fuel-removals"},
 	"bunker-partitions list":    {"GET /bunker-partitions"},
 
 	"position-reports list":   {"GET /position-reports"},
