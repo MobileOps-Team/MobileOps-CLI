@@ -48,6 +48,7 @@ Users may use different terms for the same concepts. Always map to the correct C
 | event, timeline entry, wheelhouse event, job log | `events search` | Read-only search; events are created in the app |
 | code, accounting code, billing code, job code | `codes` | Company-wide or scoped to one vessel |
 | fuel reading, tank level, sounding | `fuel-level-readings` | Tank levels over time |
+| fuel removed, pump-off, fuel transfer out, defuel | `fuel-removals` | Fuel taken off a vessel without being burned |
 | fuel lift, bunker, fuel consumption | `bunker-partitions` | One lift plus the consumption drawn from it |
 | manufacturer, brand | `makes` | Equipment manufacturers |
 | position, role, title | `employee-positions` | Crew job titles |
@@ -1088,6 +1089,23 @@ Each reading carries `reading_at`, `reading_type`, `level`, the fuel type, the m
 
 ---
 
+### Fuel Removals
+
+```bash
+# Fuel pumped off a vessel (to another vessel or to shore), oldest first
+mobileops fuel-removals list --vessel-id <vessel_id> --json
+mobileops fuel-removals list --vessel-id <vessel_id> --from 2026-03-01T00:00:00Z --to 2026-03-31T23:59:59Z --json
+mobileops fuel-removals list --job-id <job_id> --json
+
+# Filters: --vessel-id, --job-id, --from (ISO 8601), --to (ISO 8601)
+```
+
+**API: GET /api/fuel-removals (read-only)**
+
+Each removal carries `removed_at`, `quantity`, `reason`, the fuel type, the measurement unit and the `location_*` it happened at. Removals lower what is left in a bunker partition but are not counted as consumption.
+
+---
+
 ### Bunker Partitions (Fuel Lifts and Consumption)
 
 ```bash
@@ -1138,9 +1156,9 @@ A partition is one fuel lift (`quantity`, `cost`, `vendor_*`, `timestamp`) plus 
 | invoice-statements | — | ✅ (integration-status only) | — |
 | position-reports | ✅ | — | — |
 
-Read-only resources: incidents, near-misses, announcements, proposals, suppliers, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, bunker-partitions
+Read-only resources: incidents, near-misses, announcements, proposals, suppliers, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, fuel-removals, bunker-partitions
 
-Not available through the API at all (manage them in the MobileOps app): vendors, fuel types, fuel removals, event create/edit/delete.
+Not available through the API at all (manage them in the MobileOps app): vendors, fuel types, event create/edit/delete.
 
 ## Common Workflows
 
@@ -1224,7 +1242,10 @@ mobileops bunker-partitions list --vessel-id <vessel_id> --from 2026-03-01T00:00
 # 2. Tank readings over the same window
 mobileops fuel-level-readings list --vessel-id <vessel_id> --from 2026-03-01T00:00:00Z --to 2026-03-31T23:59:59Z --json
 
-# 3. Engine hours and fuel burn summed by component
+# 3. Fuel pumped off (not burned) over the same window
+mobileops fuel-removals list --vessel-id <vessel_id> --from 2026-03-01T00:00:00Z --to 2026-03-31T23:59:59Z --json
+
+# 4. Engine hours and fuel burn summed by component
 mobileops component-logs list --vessel-id <vessel_id> --sum --json
 ```
 
