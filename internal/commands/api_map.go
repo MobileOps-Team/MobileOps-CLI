@@ -82,20 +82,30 @@ var apiCoverage = map[string][]string{
 	"customers create": {"POST /customers"},
 	"customers update": {"PUT /customers/{id}"},
 
-	"suppliers list": {"GET /suppliers"},
-	"suppliers get":  {"GET /suppliers/{id}"},
+	"suppliers list":   {"GET /suppliers"},
+	"suppliers get":    {"GET /suppliers/{id}"},
+	"suppliers create": {"POST /suppliers"},
+	"suppliers update": {"PUT /suppliers/{id}"},
+
+	"vendors list":   {"GET /vendors"},
+	"vendors get":    {"GET /vendors/{id}"},
+	"vendors create": {"POST /vendors"},
+	"vendors update": {"PUT /vendors/{id}"},
 
 	"makes list":   {"GET /makes"},
 	"makes get":    {"GET /makes/{id}"},
 	"makes create": {"POST /makes"},
+	"makes update": {"PUT /makes/{id}"},
 
 	"models list":   {"GET /models"},
 	"models get":    {"GET /models/{id}"},
 	"models create": {"POST /models"},
+	"models update": {"PUT /models/{id}"},
 
 	"terms list":   {"GET /terms"},
 	"terms get":    {"GET /terms/{id}"},
 	"terms create": {"POST /terms"},
+	"terms update": {"PUT /terms/{id}"},
 
 	"divisions list":   {"GET /divisions"},
 	"divisions get":    {"GET /divisions/{id}"},

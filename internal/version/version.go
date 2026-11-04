@@ -3,4 +3,4 @@
 // and the agent manifest all read from it.
 package version
 
-const Version = "0.7.0"
+const Version = "0.8.0"

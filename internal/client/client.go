@@ -168,6 +168,12 @@ func (c *Client) Put(path string, body map[string]interface{}) (map[string]inter
 	return c.mutate("PUT", path, nil, body)
 }
 
+// PutWithParams performs a PUT request that also carries query parameters
+// (used by endpoints that scope the record by a parent ID in the query string).
+func (c *Client) PutWithParams(path string, params map[string]string, body map[string]interface{}) (map[string]interface{}, error) {
+	return c.mutate("PUT", path, params, body)
+}
+
 // Delete performs a DELETE request to the API.
 func (c *Client) Delete(path string) (map[string]interface{}, error) {
 	apiPath := c.apiPath(path)

@@ -41,7 +41,7 @@ Users may use different terms for the same concepts. Always map to the correct C
 | certificate, cert, license, doc | `vessel-documents` or `personnel-documents` | Depends on whether it belongs to a vessel or person |
 | PM, preventive maintenance, routine | `routine-templates` / `routine-calculations` | Templates define schedules; calculations show due dates |
 | PO | `purchase-orders` | Purchase orders |
-| vendor | `suppliers` | Parts/service providers (read-only) |
+| vendor, service provider | `vendors` | Companies that provide services; rate them with `--rating`. Parts suppliers are `suppliers`. |
 | audit, inspection, SIRE, survey | `audits` | Audits embed their observations, deficiencies and nonconformities |
 | hours of rest, work/rest, fatigue log | `work-rests` | One record per user per day |
 | shift, rotation, hitch, crew schedule, crew change, crew assignment | `shifts` | One crew member on one vessel for a span of time |
@@ -518,9 +518,39 @@ mobileops suppliers list --json
 
 # Get a specific supplier
 mobileops suppliers get <id> --json
+
+# Create a supplier
+mobileops suppliers create --name "Acme Marine Supply" --city "Houston" --country "USA" --json
+
+# Update a supplier
+mobileops suppliers update <id> --phone "+1-713-555-0100" --json
 ```
 
-**API: GET /api/suppliers, GET /api/suppliers/:id (read-only; suppliers are managed in the app)**
+**API: GET /api/suppliers, GET /api/suppliers/:id, POST /api/suppliers, PUT /api/suppliers/:id**
+
+Writable fields: `--name`, `--notes`, `--address`, `--city`, `--state-province`, `--postal-code`, `--country`, `--email-address`, `--phone`
+
+---
+
+### Vendors
+
+```bash
+# List vendors
+mobileops vendors list --json
+
+# Get a specific vendor
+mobileops vendors get <id> --json
+
+# Create a vendor
+mobileops vendors create --name "Gulf Coast Diesel" --short-name "GCD" --city "New Orleans" --json
+
+# Update a vendor
+mobileops vendors update <id> --rating "4" --rating-notes "Reliable, fast turnaround" --json
+```
+
+**API: GET /api/vendors, GET /api/vendors/:id, POST /api/vendors, PUT /api/vendors/:id**
+
+Writable fields: `--name`, `--short-name`, `--address`, `--city`, `--postal-code`, `--state-province`, `--country`, `--email-address`, `--phone`, `--rating`, `--rating-notes`
 
 ---
 
@@ -535,9 +565,12 @@ mobileops makes get <id> --json
 
 # Create a make (create the make first, then the models filed under it)
 mobileops makes create --name "Caterpillar" --json
+
+# Update a make
+mobileops makes update <id> --phone "+1-309-555-0199" --json
 ```
 
-**API: GET /api/makes, GET /api/makes/:id, POST /api/makes (no update through the API)**
+**API: GET /api/makes, GET /api/makes/:id, POST /api/makes, PUT /api/makes/:id**
 
 Writable fields: `--name`, `--address`, `--city`, `--postal-code`, `--country`, `--state-province`, `--email-address`, `--phone`
 
@@ -554,11 +587,14 @@ mobileops models get <id> --make-id <make_id> --json
 
 # Create a model (starts with quantity 0)
 mobileops models create --make-id <id> --name "C32 ACERT" --part-number "CAT-C32" --json
+
+# Update a model (--make-id is required; it scopes the model to its parent make)
+mobileops models update <id> --make-id <make_id> --unit-cost "12500" --json
 ```
 
-**API: GET /api/models, GET /api/models/:id, POST /api/models (no update through the API)**
+**API: GET /api/models, GET /api/models/:id, POST /api/models, PUT /api/models/:id**
 
-Writable fields: `--make-id`, `--serial-number`, `--name`, `--part-number`, `--notes`, `--vessel-id`, `--unit-cost`, `--expected-lifetime-hours`, `--critical-spares-threshold`, `--critical` (bool)
+Writable fields: `--make-id` (required on update), `--serial-number`, `--name`, `--part-number`, `--notes`, `--vessel-id`, `--unit-cost`, `--expected-lifetime-hours`, `--critical-spares-threshold`, `--critical` (bool)
 
 ---
 
@@ -668,7 +704,7 @@ mobileops locations update <id> --name "Port of Houston (Main)" --json
 
 **API: GET /api/locations, GET /api/locations/:id, POST /api/locations, PUT /api/locations/:id**
 
-Writable fields: `--name`, `--type`, `--latitude`, `--longitude`
+Writable fields: `--name`, `--type`, `--latitude`, `--longitude`, `--address`, `--street-address`, `--city`, `--state`, `--postal-code`, `--country`
 
 ---
 
@@ -861,7 +897,7 @@ mobileops position-reports list --vessel-id <vessel_id> --json
 # Create a position report
 mobileops position-reports create --asset-id <vessel_id> --latitude "29.7604" --longitude "-95.3698" --heading "180" --json
 
-# Filters: --vessel-id, --include-ultra-fields
+# Filters: --vessel-id, --created-after, --created-before (ISO 8601 timestamps), --include-ultra-fields
 ```
 
 **API: GET /api/position-reports, POST /api/position-reports**
@@ -911,9 +947,12 @@ mobileops terms get <id> --supplier-id <supplier_id> --json
 
 # Create a term (price is stored as a whole number; decimals are truncated)
 mobileops terms create --supplier-id <id> --model-id <id> --price "1500" --date-beginning "2026-01-01" --date-ending "2026-12-31" --json
+
+# Update a term
+mobileops terms update <id> --price "1650" --json
 ```
 
-**API: GET /api/terms, GET /api/terms/:id, POST /api/terms (no update through the API)**
+**API: GET /api/terms, GET /api/terms/:id, POST /api/terms, PUT /api/terms/:id**
 
 Writable fields: `--make-id`, `--model-id`, `--model-title`, `--supplier-id`, `--price`, `--notes`, `--date-beginning`, `--date-ending`
 
@@ -1144,9 +1183,11 @@ A partition is one fuel lift (`quantity`, `cost`, `vendor_*`, `timestamp`) plus 
 | shifts | ✅ | ✅ | ✅ |
 | vessel-specs | ✅ | ✅ | — |
 | customers | ✅ | ✅ | — |
-| makes | ✅ | — | — |
-| models | ✅ | — | — |
-| terms | ✅ | — | — |
+| suppliers | ✅ | ✅ | — |
+| vendors | ✅ | ✅ | — |
+| makes | ✅ | ✅ | — |
+| models | ✅ | ✅ | — |
+| terms | ✅ | ✅ | — |
 | divisions | ✅ | ✅ | — |
 | employee-positions | ✅ | ✅ | — |
 | vessel-types | ✅ | ✅ | — |
@@ -1156,9 +1197,9 @@ A partition is one fuel lift (`quantity`, `cost`, `vendor_*`, `timestamp`) plus 
 | invoice-statements | — | ✅ (integration-status only) | — |
 | position-reports | ✅ | — | — |
 
-Read-only resources: incidents, near-misses, announcements, proposals, suppliers, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, fuel-removals, bunker-partitions
+Read-only resources: incidents, near-misses, announcements, proposals, cargo-types, part-requests, vessel-spec-templates, forms, form-instances, routine-templates, routine-calculations, component-logs, purchase-orders, wheelhouse-logs, audits, work-rests, events, fuel-level-readings, fuel-removals, bunker-partitions
 
-Not available through the API at all (manage them in the MobileOps app): vendors, fuel types, event create/edit/delete.
+Not available through the API at all (manage them in the MobileOps app): fuel types, event create/edit/delete.
 
 ## Common Workflows
 

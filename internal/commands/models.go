@@ -33,6 +33,13 @@ var modelsCreateCmd = &cobra.Command{
 	RunE:  runModelsCreate,
 }
 
+var modelsUpdateCmd = &cobra.Command{
+	Use:   "update ID",
+	Short: "Update a model",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runModelsUpdate,
+}
+
 var modelFlags = map[string]string{
 	"make-id":                   "make_id",
 	"serial-number":             "serial_number",
@@ -70,10 +77,12 @@ func init() {
 	modelsGetCmd.Flags().String("make-id", "", "Parent make ID (required)")
 
 	addModelWriteFlags(modelsCreateCmd)
+	addModelWriteFlags(modelsUpdateCmd)
 
 	modelsCmd.AddCommand(modelsListCmd)
 	modelsCmd.AddCommand(modelsGetCmd)
 	modelsCmd.AddCommand(modelsCreateCmd)
+	modelsCmd.AddCommand(modelsUpdateCmd)
 }
 
 func runModelsList(cmd *cobra.Command, args []string) error {
@@ -143,6 +152,34 @@ func runModelsCreate(cmd *cobra.Command, args []string) error {
 	modelID := envelope.ExtractID(response)
 	env := envelope.WrapRecord(response, "Model created", []string{
 		fmt.Sprintf("mobileops models get %s", modelID),
+	})
+	formatter.Output(env, jsonOutput)
+	return nil
+}
+
+func runModelsUpdate(cmd *cobra.Command, args []string) error {
+	id := args[0]
+	c, err := client.New("", "", "", envFlag)
+	if err != nil {
+		return handleClientError(err)
+	}
+
+	body := bodyFromFlags(cmd, modelFlags)
+	bodyFromBoolFlags(cmd, body, modelBoolFlags)
+
+	// The parent make is scoped through the query string as well as the body.
+	params := map[string]string{}
+	if v, _ := cmd.Flags().GetString("make-id"); v != "" {
+		params["make_id"] = v
+	}
+
+	response, err := c.PutWithParams(fmt.Sprintf("models/%s", id), params, wrapBody("model", body))
+	if err != nil {
+		return handleClientError(err)
+	}
+
+	env := envelope.WrapRecord(response, "Model updated", []string{
+		fmt.Sprintf("mobileops models get %s", id),
 	})
 	formatter.Output(env, jsonOutput)
 	return nil
