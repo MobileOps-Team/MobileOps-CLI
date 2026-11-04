@@ -109,6 +109,7 @@ func init() {
 	rootCmd.AddCommand(incidentsCmd)
 	rootCmd.AddCommand(nearMissesCmd)
 	rootCmd.AddCommand(announcementsCmd)
+	rootCmd.AddCommand(vendorsCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(treeCmd)

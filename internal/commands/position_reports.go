@@ -45,6 +45,8 @@ func init() {
 	positionReportsListCmd.Flags().Int("page", 1, "Page number")
 	positionReportsListCmd.Flags().Int("limit", 10, "Items per page (max 100)")
 	positionReportsListCmd.Flags().String("vessel-id", "", "Filter by vessel ID")
+	positionReportsListCmd.Flags().String("created-after", "", "Reports created on or after this timestamp (ISO 8601)")
+	positionReportsListCmd.Flags().String("created-before", "", "Reports created on or before this timestamp (ISO 8601)")
 	positionReportsListCmd.Flags().Bool("include-ultra-fields", false, "Include custom ultra fields")
 
 	addPositionReportWriteFlags(positionReportsCreateCmd)
@@ -62,6 +64,12 @@ func runPositionReportsList(cmd *cobra.Command, args []string) error {
 	params := paginationParams(cmd)
 	if v, _ := cmd.Flags().GetString("vessel-id"); v != "" {
 		params["vessel_id"] = v
+	}
+	if v, _ := cmd.Flags().GetString("created-after"); v != "" {
+		params["created_at_gte"] = v
+	}
+	if v, _ := cmd.Flags().GetString("created-before"); v != "" {
+		params["created_at_lte"] = v
 	}
 	if v, _ := cmd.Flags().GetBool("include-ultra-fields"); v {
 		params["include_ultra_fields"] = "true"

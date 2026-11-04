@@ -41,10 +41,16 @@ var locationsUpdateCmd = &cobra.Command{
 }
 
 var locationFlags = map[string]string{
-	"name":      "name",
-	"type":      "type",
-	"latitude":  "latitude",
-	"longitude": "longitude",
+	"name":           "name",
+	"type":           "type",
+	"latitude":       "latitude",
+	"longitude":      "longitude",
+	"address":        "address",
+	"street-address": "street_address",
+	"city":           "city",
+	"state":          "state",
+	"postal-code":    "postal_code",
+	"country":        "country",
 }
 
 func addLocationWriteFlags(cmd *cobra.Command) {
@@ -52,6 +58,12 @@ func addLocationWriteFlags(cmd *cobra.Command) {
 	cmd.Flags().String("type", "", "Location type")
 	cmd.Flags().String("latitude", "", "Latitude")
 	cmd.Flags().String("longitude", "", "Longitude")
+	cmd.Flags().String("address", "", "Address")
+	cmd.Flags().String("street-address", "", "Street address")
+	cmd.Flags().String("city", "", "City")
+	cmd.Flags().String("state", "", "State")
+	cmd.Flags().String("postal-code", "", "Postal code")
+	cmd.Flags().String("country", "", "Country")
 }
 
 func init() {
